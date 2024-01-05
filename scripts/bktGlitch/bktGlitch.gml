@@ -98,7 +98,7 @@ function bktglitch_init() {
 /// @description Activates the shader and sets required uniforms.
 /// @param {real} _width
 /// @param {real} _height
-function bktglitch_activate(_width, _height) {
+function bktglitch_activate(_width = undefined, _height = undefined) {
 	/*	   
 	    By default, the shader adapts to the resolution of the application surface.
 	    You can override this by providing your own values via the arguments of this function.

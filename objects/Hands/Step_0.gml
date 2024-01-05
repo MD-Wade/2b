@@ -7,10 +7,10 @@ switch (state_current)	{
 		break;
 
 	case E_STATES_HANDS.NORMAL:
-		for (var i = 0; i < 2; i ++)	{
-			hand_trigger_input[i] = mouse_check_button_pressed(hand_trigger_button[i]);
-			if (hand_trigger_input[i])	{
-				execute_input(i);
+		for (var _hand_index = 0; _hand_index < global.track_note_hand_count; _hand_index ++)	{
+			hand_input[_hand_index] = keyboard_check_pressed(hand_button[_hand_index]);
+			if (hand_input[_hand_index])	{
+				execute_input(_hand_index);
 			}
 		}
 		break;

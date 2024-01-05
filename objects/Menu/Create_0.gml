@@ -1,11 +1,6 @@
 /// @description Initialize
 
 function TrackDetails(_file_midi, _file_audio, _file_art, _file_info) constructor {
-    function prepare_path(_file_path) {
-        _file_path = string_replace_all(_file_path, "\\", "/");
-        return _file_path;
-    }
-	
 	function read_file(_file_path)	{
 		var _file_handle = file_text_open_read(_file_path);
 		var _file_string = "";
@@ -15,10 +10,10 @@ function TrackDetails(_file_midi, _file_audio, _file_art, _file_info) constructo
 		return _file_string;
 	}
 
-    file_midi = prepare_path(_file_midi);
-    file_audio = prepare_path(_file_audio);
-    file_art = prepare_path(_file_art);
-	file_info = prepare_path(_file_info);
+    file_midi = (_file_midi);
+    file_audio = (_file_audio);
+    file_art = (_file_art);
+	file_info = (_file_info);
 
     dynamic_stream = audio_create_stream(self.file_audio);
     dynamic_sprite = sprite_add(self.file_art, 1, false, false, 0, 0);
@@ -30,22 +25,23 @@ function TrackDetails(_file_midi, _file_audio, _file_art, _file_info) constructo
 }
 
 function scan_tracks()	{
-	tracks_directory = working_directory + "Tracks";
+	function prepare_path(_file_path) {
+        _file_path = string_replace_all(_file_path, "\\", "/");
+        return _file_path;
+    }
+	tracks_directory = prepare_path(working_directory + "Tracks");
 	tracks_details_all = [];
 
 	if (directory_exists(tracks_directory)) {
-	    var _directory_filter = tracks_directory + "/*";
+	    var _directory_filter = prepare_path(tracks_directory + "/*");
 	    var _track_path = file_find_first(_directory_filter, fa_directory);
-	    show_debug_message("_directoryFilter: " + _directory_filter);
-	    show_debug_message("_trackPath: " + _track_path);
 
 	    while (_track_path != "") {
-	        var _track_path_full = tracks_directory + "/" + _track_path;
-	        show_debug_message(_track_path_full);
-	        var _file_midi = _track_path_full + "/notes.mid";
-	        var _file_audio = _track_path_full + "/song.ogg";
-	        var _file_art = _track_path_full + "/album.png";
-			var _file_info = _track_path_full + "/info.json";
+	        var _track_path_full = prepare_path(tracks_directory + "/" + _track_path);
+	        var _file_midi = prepare_path(_track_path_full + "/track.mid");
+	        var _file_audio = prepare_path(_track_path_full + "/track.ogg");
+	        var _file_art = prepare_path(_track_path_full + "/track.png");
+			var _file_info =prepare_path( _track_path_full + "/track.json");
 
 	        if not file_exists(_file_midi) {
 	            show_debug_message("Missing MIDI");
@@ -53,6 +49,7 @@ function scan_tracks()	{
 	        }
 	        if not file_exists(_file_audio) {
 	            show_debug_message("Missing Audio Stream");
+				_track_path = file_find_next();
 	            continue;
 	        }
 	        if not file_exists(_file_art) {
@@ -67,10 +64,7 @@ function scan_tracks()	{
 			array_push(tracks_details_all, _track_details);
 	        _track_path = file_find_next();
 	    }
-	    show_debug_message("Done parsing tracks.");
 	    file_find_close();
-	} else {
-	    show_debug_message("Could not find Tracks.");
 	}
 }
 function play_track(_track_details)	{
@@ -110,7 +104,8 @@ function draw_track_entry(_offset_x, _offset_y, _track_details, _is_selected)	{
 	var _colour_text_author = c_gray;
 	
 	if (_is_selected)	{
-		_colour_background = c_dkgray;
+		var _colour_mix = max(wave(-4, 0.35, 1, 0), 0);
+		_colour_background = merge_colour(c_dkgray, c_gray, _colour_mix);
 		_colour_text_title = c_white;
 		_colour_text_author = c_ltgray;
 	}
@@ -135,10 +130,6 @@ function draw_track_entry_all()	{
 		var _track_details_current = tracks_details_all[_track_entry_index];
 		var _track_is_selected = (_track_entry_index == track_entry_selected);
 		var _offset_x = 0.0;
-		
-		if _track_is_selected	{
-			_offset_x = wave(0.0, 2.0, 0.5, 0.0);
-		}
 		
 		var _track_entry_pos_x = track_entry_pos_x + _offset_x;
 		var _track_entry_pos_y = track_entry_pos_y + _track_entry_offset_y;
