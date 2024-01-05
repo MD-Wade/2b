@@ -55,7 +55,7 @@ function draw_hands_text()	{
 	draw_set_font(fontAccuracy);
 	draw_set_halign(fa_right);
 	draw_set_valign(fa_middle);
-	var _colour_base = merge_colour(hand_trigger_text_colour[0], c_white, hand_trigger_text_colour_tween[0]);
+	var _colour_base = merge_colour(hand_trigger_text_colour[0], c_white, clamp(hand_trigger_text_colour_tween[0], 0, 1));
 	var _colour_shadow = merge_colour(_colour_base, c_black, 0.8);
 	draw_set_colour(_colour_shadow);
 	draw_text_transformed(hand_trigger_text_x[0] - 2, hand_trigger_text_y[0] + 1, hand_trigger_text_string[0], hand_trigger_text_scale[0], hand_trigger_text_scale[0], 0);
@@ -64,7 +64,7 @@ function draw_hands_text()	{
 
 	draw_set_halign(fa_left);
 	draw_set_valign(fa_middle);
-	var _colour_base = merge_colour(hand_trigger_text_colour[1], c_white, hand_trigger_text_colour_tween[1]);
+	var _colour_base = merge_colour(hand_trigger_text_colour[1], c_white, clamp(hand_trigger_text_colour_tween[1], 0, 1));
 	var _colour_shadow = merge_colour(_colour_base, c_black, 0.8);
 	draw_set_colour(_colour_shadow);
 	draw_text_transformed(hand_trigger_text_x[1] + 2, hand_trigger_text_y[1] + 1, hand_trigger_text_string[1], hand_trigger_text_scale[1], hand_trigger_text_scale[1], 0);
@@ -76,20 +76,53 @@ enum E_STATES_HANDS	{
 	INTRO, NORMAL
 }
 state_current = E_STATES_HANDS.INTRO;
+state_tick_target = 1500;
 
+hand_count = 2;
+hand_size = 128;
+hand_trigger_size = hand_size * 0.75;
 hand_target_x = (room_width / 2);
 hand_target_y = ((room_height / 4) * 3);
 
-hand_size = 128;
-hand_trigger_size = hand_size * 0.75;
+for (var _iteration = 0; _iteration < hand_count; _iteration ++)	{
+	var _interp_value = (_iteration / hand_count);
+	var _position_x_center = (room_width / 2);
+	var _position_y_center = (room_height / 2);
+	var _position_x_minimum = (_position_x_center - (hand_size  * 4));
+	var _position_x_maximum = (_position_x_center + (hand_size * 4));
+	var _position_y_main = (_position_y_center + (hand_size * 2));
+	
+	hand_trigger_pos_x[_iteration] = lerp(_position_x_minimum, _position_x_maximum, _interp_value);
+	hand_trigger_pos_y[_iteration] = _position_y_main;
+}
 
-hand_trigger_pos_x[0] = (room_width / 2) - (hand_size / 2);
-hand_trigger_pos_y[0] = ((room_height / 4) * 3);
-hand_trigger_button[0] = mb_left;
-
-hand_trigger_pos_x[1] = (room_width / 2) + (hand_size * 0.65);
-hand_trigger_pos_y[1] = ((room_height / 4) * 3);
-hand_trigger_button[1] = mb_right;
+switch (hand_count)	{
+	case 2:
+		hand_trigger_button[0] = ord("S");
+		hand_trigger_button[1] = ord("K");
+		break;
+		
+	case 3:
+		hand_trigger_button[0] = ord("S");
+		hand_trigger_button[1] = vk_space;
+		hand_trigger_button[2] = ord("K");
+		break;
+		
+	case 4:
+		hand_trigger_button[0] = ord("S");
+		hand_trigger_button[1] = ord("D");
+		hand_trigger_button[2] = ord("J");
+		hand_trigger_button[3] = ord("K");
+		break;
+		
+	case 5:
+		hand_trigger_button[0] = ord("S");
+		hand_trigger_button[1] = ord("D");
+		hand_trigger_button[2] = ord(vk_space);
+		hand_trigger_button[3] = ord("J");
+		hand_trigger_button[4] = ord("K");
+		break;
+}
 
 hand_trigger_text_x[0] = hand_trigger_pos_x[0] - (hand_trigger_size * 0.75);
 hand_trigger_text_y[0] = hand_trigger_pos_y[0];

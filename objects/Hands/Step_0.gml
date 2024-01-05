@@ -1,7 +1,7 @@
 
 switch (state_current)	{
 	case E_STATES_HANDS.INTRO:
-		if (global.track_time_current_ms > 1500)	{
+		if (global.track_time_current_ms > state_tick_target)	{
 			state_current = E_STATES_HANDS.NORMAL;
 		}
 		break;

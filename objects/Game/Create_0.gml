@@ -32,6 +32,7 @@ function camera_draw()	{
 function note_score_execute(_hand_index, _note_accuracy)	{
 	var _text_tween_colour = global.note_hit_colour[_note_accuracy];
 	global.game_score += global.note_hit_score[_note_accuracy];
+	audio_play_sound(global.note_hit_sound[_note_accuracy], 1, false);
 
 	with (Hands)	{
 		hand_trigger_text_colour[_hand_index] = _text_tween_colour;
@@ -39,9 +40,9 @@ function note_score_execute(_hand_index, _note_accuracy)	{
 		if TweenExists(hand_trigger_text_tween_id[_hand_index])	{
 			TweenDestroy(hand_trigger_text_tween_id[_hand_index]);
 		}
-		hand_trigger_text_tween_id[_hand_index] = TweenFire(id, EaseOutCirc, TWEEN_MODE_BOUNCE, true, 0, 0.35,
+		hand_trigger_text_tween_id[_hand_index] = TweenFire(id, EaseOutBack, TWEEN_MODE_BOUNCE, true, 0, 0.35,
 			TPArray(hand_trigger_text_colour_tween, _hand_index), 0, 1,
-			TPArray(hand_trigger_text_scale, _hand_index), 1, 1.35
+			TPArray(hand_trigger_text_scale, _hand_index), 1, 1.10
 		);
 	}
 }
@@ -88,20 +89,20 @@ function draw_fade()	{
 }
 function draw_render_game()	{
 	surface_check();
-	surface_set_target(surface_main);
-	draw_clear_alpha(c_black, 0);
 	
-	gpu_set_blendmode(bm_normal);
 	with (TileBackground)	{
 		surface_check();
 		shader_set(shdEarthboundBoth);
-		shader_set_uniform_f(shader_get_uniform(shdEarthboundBoth, "speed"), 0.001);
+		shader_set_uniform_f(shader_get_uniform(shdEarthboundBoth, "speed"), 0.0001);
 		shader_set_uniform_f(shader_get_uniform(shdEarthboundBoth, "frequency"), 4.0);
-		shader_set_uniform_f(shader_get_uniform(shdEarthboundBoth, "size"), 0.2);
+		shader_set_uniform_f(shader_get_uniform(shdEarthboundBoth, "size"), 0.01);
 		shader_set_uniform_f(shader_get_uniform(shdEarthboundBoth, "time"), current_time);
 		draw_surface_center_ext(surface, room_width / 2, room_height / 2, 1.5, 1.5, 0, c_white, 0.6);
 		shader_reset();
 	}
+	
+	surface_set_target(surface_main);
+	draw_clear_alpha(c_black, 0);
 	
 	with (Pickup)	{
 		draw_pickup();
@@ -125,18 +126,23 @@ function draw_render_game()	{
 	var _draw_angle = wave(-15, 15, 40, 0);
 	
 	surface_set_target(surface_aux2);
+	draw_set_colour(c_black);
+	draw_set_alpha(2/255);
+	draw_rectangle(0, 0, room_width, room_height, false);
+	draw_set_colour(c_white);
+	draw_set_alpha(1.0);
 	shader_set(shdEarthboundBoth);
-	shader_set_uniform_f(shader_get_uniform(shdEarthboundBoth, "speed"), 0.002);
-	shader_set_uniform_f(shader_get_uniform(shdEarthboundBoth, "frequency"), 4.0);
-	shader_set_uniform_f(shader_get_uniform(shdEarthboundBoth, "size"), wave(0.1, 0.9, 24, 0));
+	shader_set_uniform_f(shader_get_uniform(shdEarthboundBoth, "speed"), 0.0001);
+	shader_set_uniform_f(shader_get_uniform(shdEarthboundBoth, "frequency"), 1.0);
+	shader_set_uniform_f(shader_get_uniform(shdEarthboundBoth, "size"), wave(0, 4, 60, 0));
 	shader_set_uniform_f(shader_get_uniform(shdEarthboundBoth, "time"), current_time);
 	draw_surface_center_ext(surface_aux1, _draw_pos_center_x, _draw_pos_center_y, _draw_scale, _draw_scale, _draw_angle, c_white, 0.8);
-	shader_set_uniform_f(shader_get_uniform(shdEarthboundBoth, "time"), current_time + 1000);
+	shader_set_uniform_f(shader_get_uniform(shdEarthboundBoth, "time"), current_time + 500);
 	draw_surface_ext(surface_main, 0, 0, 1, 1, 0, c_white, 0.8);
 	shader_reset();
 	surface_reset_target();
 	
-	draw_surface_ext(surface_aux2, 0, 0, 1.0, 1.0, 0.0, c_white, 0.1);
+	draw_surface_ext(surface_aux2, 0, 0, 1.0, 1.0, 0.0, c_white, 0.16);
 	draw_surface(surface_main, 0, 0);
 	surface_copy(surface_aux1, 0, 0, surface_aux2);
 }
@@ -174,10 +180,10 @@ global.track_time_current_ms = 0;
 global.game_glitch_intensity = 1.0;
 global.game_points_possible = 0;
 
-global.note_hit_colour[E_NOTE_ACCURACY.MISS] = merge_colour(c_navy, c_aqua, 0.2);
-global.note_hit_colour[E_NOTE_ACCURACY.OKAY] = merge_colour(c_navy, c_aqua, 0.4);
-global.note_hit_colour[E_NOTE_ACCURACY.GOOD] = merge_colour(c_navy, c_aqua, 0.6);
-global.note_hit_colour[E_NOTE_ACCURACY.PERFECT] = merge_colour(c_navy, c_aqua, 0.8);
+global.note_hit_colour[E_NOTE_ACCURACY.MISS] = merge_colour(c_navy, c_white, 0.2);
+global.note_hit_colour[E_NOTE_ACCURACY.OKAY] = merge_colour(c_navy, c_white, 0.4);
+global.note_hit_colour[E_NOTE_ACCURACY.GOOD] = merge_colour(c_navy, c_white, 0.6);
+global.note_hit_colour[E_NOTE_ACCURACY.PERFECT] = merge_colour(c_navy, c_white, 0.8);
 global.note_hit_description[E_NOTE_ACCURACY.MISS] = "MISS";
 global.note_hit_description[E_NOTE_ACCURACY.OKAY] = "OKAY";
 global.note_hit_description[E_NOTE_ACCURACY.GOOD] = "GOOD";
@@ -186,6 +192,10 @@ global.note_hit_score[E_NOTE_ACCURACY.MISS] = -100;
 global.note_hit_score[E_NOTE_ACCURACY.OKAY] = 35;
 global.note_hit_score[E_NOTE_ACCURACY.GOOD] = 80;
 global.note_hit_score[E_NOTE_ACCURACY.PERFECT] = 100;
+global.note_hit_sound[E_NOTE_ACCURACY.MISS] = sndNoteMiss;
+global.note_hit_sound[E_NOTE_ACCURACY.OKAY] = sndNoteOkay;
+global.note_hit_sound[E_NOTE_ACCURACY.GOOD] = sndNoteGood;
+global.note_hit_sound[E_NOTE_ACCURACY.PERFECT] = sndNotePerfect;
 
 global.song_time_playback_factor = 1;
 

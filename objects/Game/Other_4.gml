@@ -22,9 +22,9 @@ switch (room)	{
 		audio_sound_pitch(song_id, global.song_time_playback_factor);
 
 		global.song_time_tempo_bpm = -1;
-		for (var i = 0; i < ds_list_size(midi_information_events); i ++)	{
-			var _event_index = midi_information_events[| i];
-			if (_event_index[1] == "bpm change")	{
+		for (var i = 0; i < array_length(midi_information_events); i ++)	{
+			var _event_index = midi_information_events[i];
+			if (_event_index[1] == MIDI_E_BPM)	{
 				global.song_time_tempo_bpm = _event_index[2];
 			}
 		}
@@ -43,21 +43,8 @@ switch (room)	{
 		var ticks_per_minute = global.song_time_tempo_bpm * global.song_time_ppq;
 		global.song_time_tick_length = 60 / ticks_per_minute / global.song_time_playback_factor;
 
-		global.song_time_offset_note = audio_sound_get_track_position(song_id);
-		show_debug_message(global.song_time_offset_note);
-
-		var debugMessage = "PRINTING SONG INFORMATION: " +
-			"\n song_time_tempo_bpms: " + string(global.song_time_tempo_bpms) +
-			", \ntrack_time_current_ms: " + string(global.track_time_current_ms) +
-			", \nsong_time_ppq: " + string(global.song_time_ppq) +
-			", \nsong_note_speed_frame: " + string(global.song_note_speed_frame) +
-			", \nsong_note_speed_second: " + string(global.song_note_speed_second) +
-			", \nsong_time_tick_length: " + string(global.song_time_tick_length) +
-			", \nsong_time_offset_note: " + string(global.song_time_offset_note);
-		show_debug_message(debugMessage);
-
-		for (var i = 0; i < ds_list_size(midi_information_notes); i ++)	{
-			var _note_index = midi_information_notes[| i];
+		for (var i = 0; i < array_length(midi_information_notes); i ++)	{
+			var _note_index = midi_information_notes[i];
 			var _note_time_start = (_note_index[0] * global.song_time_tick_length) + audio_sound_get_track_position(song_id);
 			var _note_type = ((_note_index[1] == 60) ? -1 : 1);
 			global.game_points_possible += 100;

@@ -1,11 +1,11 @@
 {
   "resourceType": "GMScript",
   "resourceVersion": "1.0",
-  "name": "hex_to_bin",
+  "name": "scr_midi",
   "isCompatibility": false,
   "isDnD": false,
   "parent": {
-    "name": "base conversion",
-    "path": "folders/Scripts/MIDI Read/base conversion.yy",
+    "name": "General Functions",
+    "path": "folders/Scripts/General Functions.yy",
   },
 }

@@ -64,3 +64,4 @@ circle_radius_time = 0.5;
 
 note_colour_perfect = c_aqua;
 note_colour_normal = c_navy;
+image_blend = note_colour_normal;

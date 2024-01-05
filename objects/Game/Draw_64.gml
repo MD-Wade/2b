@@ -1,5 +1,3 @@
-// boiling line
-
 var _draw_scale_x = display_get_gui_width() / surface_get_width(application_surface);
 var _draw_scale_y = display_get_gui_height() / surface_get_height(application_surface);
 
