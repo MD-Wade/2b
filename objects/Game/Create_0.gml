@@ -1,5 +1,26 @@
 // initialize
 
+#macro TIME_TRACK_GRACE_PERIOD 3000
+
+function cleanup_stream()	{
+	if audio_is_playing(song_instance)	{
+		audio_stop_sound(song_instance);
+	}
+}
+function cleanup_surfaces()	{
+	if surface_exists(surface_main)	{
+		surface_free(surface_main);
+	}
+	if surface_exists(surface_aux1)	{
+		surface_free(surface_aux1);
+	}
+	if surface_exists(surface_aux2)	{
+		surface_free(surface_aux2);
+	}
+	surface_main = -1;
+	surface_aux1 = -1;
+	surface_aux2 = -1;
+}
 function camera_init()	{
 	view_enabled = true;
 	view_visible[0] = true;
@@ -37,7 +58,7 @@ function note_check_place() {
 	if (array_length(midi_note_timings) > 0)	{
 		var _note_current = midi_note_timings[0];
 		if !is_undefined(_note_current)	{
-			while (global.track_time_current_ms > (_note_current.time_ms - note_fall_time))	{
+			while (global.track_time_current_ms > (_note_current.time_ms - TIME_TRACK_GRACE_PERIOD))	{
 				_note_current = array_shift(midi_note_timings);
 				if is_undefined(_note_current)	{
 					break;
@@ -46,12 +67,13 @@ function note_check_place() {
 			}
 		}
 	}	else	{
-		room_fade_out = approach(room_fade_out, 1, 0.002);
-        audio_sound_gain(song_id, 1 - room_fade_out, 0);
-        if (room_fade_out >= 1)	{
-            room_fade_out = 0;
-            room_goto(roomMenu);
-        }
+		if (instance_number(Note) <= 0)	{
+			room_fade_out = approach(room_fade_out, 1, 0.002);
+	        audio_sound_gain(song_instance, 1 - room_fade_out, 0);
+	        if (room_fade_out >= 1)	{
+				song_finish();
+	        }
+		}
 	}
     
 }
@@ -75,12 +97,13 @@ function hands_init()	{
 	hands_size = 96;
 }
 function hands_create()	{
+	hands_init();
 	hands = instance_create_layer(hands_center_x, hands_center_y, "Instances", Hands);
 	with (hands)	{
 		hands_size = other.hands_size;
 		init_hands();
 	}
-	hands_init();
+	
 }
 function song_start(_track_details)	{
 	global.track_details_current = _track_details;
@@ -88,7 +111,6 @@ function song_start(_track_details)	{
 	room_goto(roomGame);
 }
 function song_load(_track_details)	{
-	song_play_audio();
 	song_load_midi(_track_details);
 	song_load_bpm();
 	song_load_notes();
@@ -106,18 +128,13 @@ function song_load_bpm()	{
 	}
 	
 	global.track_time_tempo_bpms = (global.track_time_tempo_bpm / 60000);
-	global.track_time_current_ms = 0;
+	global.track_time_current_ms = (TIME_TRACK_GRACE_PERIOD * -1);
 	global.track_time_ppq = 96;
-	global.track_note_speed_second = 768;
+	global.track_note_speed_second = 256;
 	global.track_note_speed_frame = global.track_note_speed_second / game_get_speed(gamespeed_fps);
 
 	var _ticks_per_minute = global.track_time_tempo_bpm * global.track_time_ppq;
 	global.track_time_tick_duration_seconds = (60) / _ticks_per_minute / global.track_time_playback_factor;
-	
-	hands_init();
-	var _pos_y = hands_size / -2;
-	var _note_distance_y = abs(_pos_y - hands_center_y);
-	note_fall_time = (_note_distance_y / global.track_note_speed_second) * 1000;
 }
 function song_load_midi(_track_details)	{
 	midi_information_array = midi_read(_track_details.file_midi, false);
@@ -128,34 +145,51 @@ function song_load_notes()	{
 	midi_note_timings = [];
 
 	var _unique_notes = {};
-	for (var _note_index = 0; _note_index < array_length(midi_information_notes); _note_index++) {
+	for (var _note_index = 0; _note_index < array_length(midi_information_notes); _note_index ++) {
 	    var _note_info = midi_information_notes[_note_index];
 	    var _note_type = _note_info[1];
 	    struct_set(_unique_notes, string(_note_type), "");
 	}
 	
-	var _note_to_index_mapping = {};
-	var _hands_count = struct_names_count(_unique_notes);
-	switch (_hands_count) {
-	    case 2:
-	    case 3:
-	    case 4:
-	    case 5:
-			show_debug_message("Loaded this track (" + global.track_details_current.track_name + ")" + " with number of hands (" + string(_hands_count) + ").");
-	        break;
-	    default:
-	        show_error("ERROR! This track (" + global.track_details_current.track_name + ") has an unsupported number of hands (" + string(_hands_count) + ").", true);
-	        break;
-	}
-
-	global.track_note_hand_count = _hands_count;
+	global.track_note_hand_count = 6;
 	var _unique_notes_names = struct_get_names(_unique_notes);
 	array_sort(_unique_notes_names, function(elm1, elm2) {
 	    return real(elm1) - real(elm2);
 	});
-	for (var _note_index = 0; _note_index < _hands_count; _note_index ++) {
-	    var _note_name = _unique_notes_names[_note_index];
-	    _note_to_index_mapping[_note_name] = _note_index;
+	
+	var _note_to_index_mapping = {};
+	var _unique_note_count = struct_names_count(_unique_notes);
+	switch (_unique_note_count) {
+	    case 1:
+	        _note_to_index_mapping[$ _unique_notes_names[0]] = 0;
+	        break;
+	    case 2:
+	        _note_to_index_mapping[$ _unique_notes_names[0]] = 0;
+	        _note_to_index_mapping[$ _unique_notes_names[1]] = 5;
+	        break;
+	    case 3:
+	        _note_to_index_mapping[$ _unique_notes_names[0]] = 0;
+	        _note_to_index_mapping[$ _unique_notes_names[1]] = 3;
+	        _note_to_index_mapping[$ _unique_notes_names[2]] = 5;
+	        break;
+	    case 4:
+	        _note_to_index_mapping[$ _unique_notes_names[0]] = 0;
+	        _note_to_index_mapping[$ _unique_notes_names[1]] = 2;
+	        _note_to_index_mapping[$ _unique_notes_names[2]] = 3;
+	        _note_to_index_mapping[$ _unique_notes_names[3]] = 5;
+	        break;
+	    case 5:
+	        _note_to_index_mapping[$ _unique_notes_names[0]] = 0;
+	        _note_to_index_mapping[$ _unique_notes_names[1]] = 1;
+	        _note_to_index_mapping[$ _unique_notes_names[2]] = 2;
+	        _note_to_index_mapping[$ _unique_notes_names[3]] = 3;
+	        _note_to_index_mapping[$ _unique_notes_names[4]] = 5;
+	        break;
+	    case 6:
+	        for (var _note_index = 0; _note_index < _unique_note_count; _note_index ++) {
+				_note_to_index_mapping[$ _unique_notes_names[_note_index]] = _note_index;
+	        }
+	        break;
 	}
 
 	function NoteTime(_hand_index, _time_ms) constructor	{
@@ -167,7 +201,7 @@ function song_load_notes()	{
 		var _note_info = midi_information_notes[_note_index];
 		var _note_time_start = (_note_info[0] * global.track_time_tick_duration_seconds);
 		var _note_type = string(_note_info[1]);
-	    var _note_hand_index = _note_to_index_mapping[_note_type];
+	    var _note_hand_index = variable_struct_get(_note_to_index_mapping, _note_type);
         var _note_time = new NoteTime(_note_hand_index, _note_time_start * 1000);
         array_push(midi_note_timings, _note_time);
 	}
@@ -178,8 +212,14 @@ function song_load_notes()	{
 	show_debug_message("Loaded this track (" + global.track_details_current.track_name + ")" + " with number of notes (" + string(array_length(midi_note_timings)) + ").");
 }
 function song_play_audio()	{
-	song_id = audio_play_sound(global.track_stream, 1, false);
-	audio_sound_pitch(song_id, global.track_time_playback_factor);
+	song_instance = audio_play_sound(global.track_stream, 1, false);
+	song_instance_cooked = false;
+	audio_sound_pitch(song_instance, global.track_time_playback_factor);
+}
+function song_finish()	{
+	song_instance_cooked = false;
+	room_fade_out = 0;
+	room_goto(roomMenu);
 }
 function surface_check()	{
 	if !surface_exists(surface_main)	{
@@ -281,29 +321,12 @@ function draw_render_game()	{
 	draw_surface(surface_main, 0, 0);
 	surface_copy(surface_aux1, 0, 0, surface_aux2);
 }
-function draw_render_game_normal()	{
-	surface_check();
-	surface_set_target(surface_main);
-	draw_clear_alpha(c_black, 0);
-	
-	with (Note)	{
-		draw_note();
-	}
-	
-	with (Hands)	{
-		draw_hands();
-	}
-	
-	draw_score();
-	surface_reset_target();
-	draw_surface(surface_main, 0, 0);
-}
 
 randomize();
 
 global.window_res_width = 1280;
 global.window_res_height = 720;
-global.window_res_upscale = 1;
+global.window_res_upscale = 4;
 
 global.delta_current = (1 / game_get_speed(gamespeed_fps));
 global.delta_multiplier = (1);
@@ -357,6 +380,8 @@ hands_center_y = room_height * 0.75;
 hands_size = 96;
 delta_target = (1 / game_get_speed(gamespeed_fps));
 delta_current = (delta_time / 1000000);
+song_instance = -1;
+song_instance_cooked = false;
 
 depth = -1000;
 
