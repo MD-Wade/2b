@@ -149,7 +149,7 @@ function draw_track_entry_all()	{
 track_entry_border = 4;
 track_entry_button_width = 128;
 track_entry_button_height = 128;
-track_entry_width = ((room_width / 2.0) - (track_entry_border * 2));
+track_entry_width = (room_width - (track_entry_border * 2));
 track_entry_height = (track_entry_button_height + track_entry_border);
 track_entry_height_border = (track_entry_height + track_entry_border);
 track_entry_pos_x = (track_entry_border / 2);

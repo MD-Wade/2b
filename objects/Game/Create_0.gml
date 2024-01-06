@@ -1,6 +1,6 @@
 // initialize
 
-#macro TIME_TRACK_GRACE_PERIOD 3000
+#macro TIME_TRACK_GRACE_PERIOD 4000
 
 function cleanup_stream()	{
 	if audio_is_playing(song_instance)	{
@@ -59,10 +59,11 @@ function note_score_execute(_note_accuracy)	{
 	audio_play_sound(global.note_hit_sound[_note_accuracy], 1, false);
 }
 function note_check_place() {
+	show_debug_message(midi_note_placed);
 	if (array_length(midi_note_timings) > 0)	{
 		var _note_current = midi_note_timings[0];
 		if !is_undefined(_note_current)	{
-			while (global.track_time_current_ms > (_note_current.time_ms - TIME_TRACK_GRACE_PERIOD))	{
+			while (global.track_time_current_ms > (_note_current.time_ms - midi_note_spawn_offset))	{
 				_note_current = array_shift(midi_note_timings);
 				if is_undefined(_note_current)	{
 					break;
@@ -93,9 +94,10 @@ function note_create(_type, _time_ms)	{
 
 	_note_instance.note_type = _type;
 	_note_instance.note_time_ideal = _time_ms;
-	_note_instance.note_size = hands_size;
 	_note_instance.note_perfecting_end_x = _perfect_pos_x;
 	_note_instance.note_perfecting_end_y = _perfect_pos_y;
+	_note_instance.note_size_base = hands_size;
+	_note_instance.note_size = hands_size;
 }
 function hands_init()	{
 	hands_center_x = room_width * 0.5;
@@ -140,6 +142,7 @@ function song_load_bpm()	{
 	global.track_time_ppq = 96;
 	global.track_note_speed_second = 512;
 	global.track_note_speed_frame = global.track_note_speed_second / game_get_speed(gamespeed_fps);
+	midi_note_spawn_offset = (room_height / global.track_note_speed_second) * 1000;
 
 	var _ticks_per_minute = global.track_time_tempo_bpm * global.track_time_ppq;
 	global.track_time_tick_duration_seconds = (60) / _ticks_per_minute / global.track_time_playback_factor;
@@ -227,6 +230,7 @@ function song_play_audio()	{
 function song_finish()	{
 	song_instance_cooked = false;
 	room_fade_out = 0;
+	audio_destroy_stream(global.track_stream);
 	room_goto(roomMenu);
 }
 function surface_check()	{
@@ -348,8 +352,7 @@ function draw_render_game_normal()	{
 	
 	with (Note)	{
 		draw_note();
-	}
-	
+	}	
 	with (Hands)	{
 		draw_hands();
 	}
@@ -398,8 +401,9 @@ global.game_score = 0;
 
 midi_information_notes = [];
 midi_information_events = [];
-midi_note_timings = [];
 midi_information_array =  [midi_information_notes, midi_information_events];
+midi_note_timings = [];
+midi_note_spawn_offset = undefined;
 midi_note_placed = false;
 midi_note_placed_finished = false;
 room_fade_in = 0;

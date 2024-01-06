@@ -1,5 +1,10 @@
 function execute_input(_hand_input) {
     var _note_information = return_note_accuracy(_hand_input);
+	
+	if TweenExists(hand_trigger_tween_instance[_hand_input])	{
+		TweenDestroy(hand_trigger_tween_instance[_hand_input]);
+	}
+	hand_trigger_tween_instance[_hand_input] = TweenFire(id, trigger_tween_ease, TWEEN_MODE_ONCE, true, trigger_tween_delay, trigger_tween_duration, TPArray(hand_trigger_tween, _hand_input), 0, 1);
 
     if (instance_exists(_note_information[0])) {
         with (_note_information[0]) {
@@ -38,21 +43,23 @@ function return_note_accuracy(_hand_index_check) {
 
     return [_return_id, _return_accuracy];
 }
+function draw_hand(_hand_index)	{
+	var _hand_trigger_tween = hand_trigger_tween[_hand_index];
+	var _hand_trigger_size_delta = lerp(0, trigger_size_delta, _hand_trigger_tween);
+	var _pos_x1 = hand_pos_x[_hand_index] - (hands_size / 2) - _hand_trigger_size_delta;
+    var _pos_y1 = hand_pos_y[_hand_index] - (hands_size / 2) - _hand_trigger_size_delta;
+    var _pos_x2 = hand_pos_x[_hand_index] + (hands_size / 2) + _hand_trigger_size_delta;
+    var _pos_y2 = hand_pos_y[_hand_index] + (hands_size / 2) + _hand_trigger_size_delta;
+    draw_rectangle_width(_pos_x1, _pos_y1, _pos_x2, _pos_y2, 4);
+    draw_text(mean(_pos_x1, _pos_x2), mean(_pos_y1, _pos_y2), chr(hand_button[_hand_index]));
+}
 function draw_hands()	{
+	draw_set_halign(fa_center);
+	draw_set_valign(fa_middle);
 	draw_set_colour(c_white);
-    draw_set_alpha(0.5);
-    var is_odd = global.track_note_hand_count % 2 != 0;
-    var middle_index = (global.track_note_hand_count - 1) / 2;
-    for (var hand_index = 0; hand_index < global.track_note_hand_count; hand_index++) {
-        var width_multiplier = (is_odd && hand_index == middle_index) ? 2 : 1;
-        var pos_x1 = hand_pos_x[hand_index] - (hands_size * width_multiplier / 2);
-        var pos_y1 = hand_pos_y[hand_index] - (hands_size / 2);
-        var pos_x2 = hand_pos_x[hand_index] + (hands_size * width_multiplier / 2);
-        var pos_y2 = hand_pos_y[hand_index] + (hands_size / 2);
-        draw_rectangle_width(pos_x1, pos_y1, pos_x2, pos_y2, 4);
-        draw_text(mean(pos_x1, pos_x2), mean(pos_y1, pos_y2), chr(hand_button[hand_index]));
+    for (var _hand_index = 0; _hand_index < global.track_note_hand_count; _hand_index ++) {
+		draw_hand(_hand_index);
     }
-    draw_set_alpha(1);
 }
 function init_hands()	{
 	for (var _iteration = 0; _iteration < global.track_note_hand_count; _iteration ++)	{
@@ -61,15 +68,18 @@ function init_hands()	{
 	    } else {
 	        var _interp_value = _iteration / (global.track_note_hand_count - 1);
 	    }
+		var _spacing_total = (4 * global.track_note_hand_count);
 		var _position_x_center = (x);
 		var _position_y_center = (y);
-		var _position_x_minimum = (_position_x_center - (hands_size  * 3));
-		var _position_x_maximum = (_position_x_center + (hands_size * 3));
+		var _position_x_minimum = (_position_x_center - (hands_size  * (global.track_note_hand_count / 2)) - _spacing_total);
+		var _position_x_maximum = (_position_x_center + (hands_size * (global.track_note_hand_count / 2)) + _spacing_total);
 		var _position_y_main = (_position_y_center);
 	
 		// Hand Position
 		hand_pos_x[_iteration] = lerp(_position_x_minimum, _position_x_maximum, _interp_value);
 		hand_pos_y[_iteration] = _position_y_main;
+		hand_trigger_tween[_iteration] = 0;
+		hand_trigger_tween_instance[_iteration] = TweenFire(id, EaseInBounce, TWEEN_MODE_ONCE, true, 0, 0.25, TPArray(hand_trigger_tween, _iteration), 0, 1);
 	}
 	switch (global.track_note_hand_count)	{
 		case 2:
@@ -110,10 +120,14 @@ function init_hands()	{
 }
 
 enum E_STATES_HANDS	{
-	INTRO, NORMAL
+	NORMAL
 }
-state_current = E_STATES_HANDS.INTRO;
-state_tick_target = 1500;
+state_current = E_STATES_HANDS.NORMAL;
 hands_size = 0;
+
+trigger_tween_ease = EaseInOutBack;
+trigger_tween_duration = 0.16;
+trigger_tween_delay = 0;
+trigger_size_delta = 12;
 
 init_hands();
