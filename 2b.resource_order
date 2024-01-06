@@ -9,6 +9,7 @@
     {"name":"bktGlitch","order":1,"path":"folders/Scripts/bktGlitch.yy",},
   ],
   "ResourceOrderSettings": [
+    {"name":"sNote","order":1,"path":"sprites/sNote/sNote.yy",},
     {"name":"Note","order":1,"path":"objects/Note/Note.yy",},
     {"name":"TGMX_System","order":1,"path":"scripts/TGMX_System/TGMX_System.yy",},
     {"name":"shdBktGlitch","order":3,"path":"shaders/shdBktGlitch/shdBktGlitch.yy",},

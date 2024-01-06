@@ -7,14 +7,6 @@ switch (state_current)	{
 		}
 
 		y += (global.track_note_speed_frame * global.delta_multiplier);
-		if (bbox_bottom > 0)	{
-			image_angle = ((image_angle + (rotation_speed * global.delta_multiplier)) mod 360);
-			if (return_accuracy() == E_NOTE_ACCURACY.PERFECT)	{
-				image_blend = note_colour_perfect;
-			}	else	{
-				image_blend = note_colour_normal;
-			}
-		}
 		break;
 
 	case E_STATES_NOTE.COLLECTED:

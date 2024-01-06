@@ -11,9 +11,9 @@ function execute_action(_in_action, _in_accuracy)	{
 	switch (_in_action)	{
 		case 0:
 			state_current = E_STATES_NOTE.COLLECTED;
+			note_perfecting_start_x = x;
+			note_perfecting_start_y = y;
 			if (_in_accuracy == E_NOTE_ACCURACY.PERFECT)	{
-				note_perfecting_start_x = x;
-				note_perfecting_start_y = y;
 				state_tick = 0;
 				state_tick_target = note_perfecting_time;
 				state_current = E_STATES_NOTE.PERFECTING;
@@ -41,13 +41,9 @@ function return_accuracy() {
     else return E_NOTE_ACCURACY.MISS;
 }
 function draw_note()	{
-	var _circle_radius = wave(circle_radius_target, circle_radius_target * circle_radius_factor, circle_radius_time, 0);
-	draw_set_colour(image_blend);
-	draw_set_alpha(image_alpha);
-	draw_circle(x, y, _circle_radius, false);
-	draw_set_colour(c_black);
-	draw_circle(x, y, _circle_radius * circle_radius_factor, false);
-	draw_set_alpha(1.0);
+	image_xscale = (note_size / sprite_get_width(sprite_index));
+	image_yscale = (note_size / sprite_get_height(sprite_index));
+	draw_sprite_ext(sprite_index, image_index, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
 }
 
 enum E_STATES_NOTE	{
@@ -59,6 +55,7 @@ enum E_NOTE_ACCURACY	{
 
 note_type = 0;
 note_time_ideal = undefined;
+note_size = 0;
 note_multiplier_early = 0.5;
 note_multiplier_late = 1.0;
 note_perfecting_start_x = undefined;
@@ -73,12 +70,3 @@ state_current = E_STATES_NOTE.FREEFALL;
 state_tick = 0;
 state_tick_target = 0;
 transition_interp = 0;
-
-rotation_speed = 2;
-circle_radius_target = 0;
-circle_radius_factor = 0.90;
-circle_radius_time = 0.5;
-
-note_colour_perfect = c_aqua;
-note_colour_normal = c_navy;
-image_blend = note_colour_normal;

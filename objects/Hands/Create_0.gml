@@ -19,11 +19,13 @@ function return_note_accuracy(_hand_index_check) {
 
     with (Note) {
         if (note_type == _hand_index_check) {
-            var _note_lowest_check = note_time_ideal - global.track_time_current_ms;
-            if (_note_lowest_check <= _note_lowest_current) {
-                _note_id = id;
-                _note_lowest_current = _note_lowest_check;
-            }
+			if (state_current == E_STATES_NOTE.FREEFALL)	{
+				var _note_lowest_check = abs(global.track_time_current_ms - note_time_ideal);
+	            if (_note_lowest_check <= _note_lowest_current) {
+	                _note_id = id;
+	                _note_lowest_current = _note_lowest_check;
+	            }
+			}
         }
     }
 
@@ -61,8 +63,8 @@ function init_hands()	{
 	    }
 		var _position_x_center = (x);
 		var _position_y_center = (y);
-		var _position_x_minimum = (_position_x_center - (hands_size  * 4));
-		var _position_x_maximum = (_position_x_center + (hands_size * 4));
+		var _position_x_minimum = (_position_x_center - (hands_size  * 3));
+		var _position_x_maximum = (_position_x_center + (hands_size * 3));
 		var _position_y_main = (_position_y_center);
 	
 		// Hand Position

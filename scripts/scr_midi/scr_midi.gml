@@ -14,7 +14,7 @@
  * @description Read midi file
  * @param {String} _file - Midi file to read from
  * @param {Boolean} [_raw=false] - Specify if output should consist of raw events or not
- * @return {Array} Returns an array containing the note list and event list from the MIDI file.
+ * @return {Array} Returns an array containing the note list, event list, and PPQ.
  */
 function midi_read(_file, _raw = false) {
     var _err_string = "Failed to read midi file: ";
