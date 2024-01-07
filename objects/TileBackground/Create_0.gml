@@ -33,11 +33,7 @@ function draw_sprite_tiled_progressive(_sprite_index, _image_index, _offset_x = 
 }
 function draw_background_normal()	{
 	var _image_blend = merge_colour(c_black, c_maroon, wave(0.2, 1, 16, 0));
-	draw_sprite_tiled_progressive(sprite_index, image_index, 0, 0, 8, 8, _image_blend, 1.0, 1);
-}
-function draw_background_cool()	{
-	var _image_blend = merge_colour(c_black, c_navy, wave(0.4, 0.6, 8, 0));
-	draw_sprite_tiled_ext(sprite_index, image_index, 0, 0, 4, 4, _image_blend, 1.0);
+	draw_sprite_tiled_progressive(sprite_index, image_index, 0, 0, 1, 1, _image_blend, 1.0, 1);
 }
 
 camera = camera_get_default();

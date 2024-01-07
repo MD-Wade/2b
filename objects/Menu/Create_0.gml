@@ -1,72 +1,5 @@
 /// @description Initialize
 
-function TrackDetails(_file_midi, _file_audio, _file_art, _file_info) constructor {
-	function read_file(_file_path)	{
-		var _file_handle = file_text_open_read(_file_path);
-		var _file_string = "";
-		while !file_text_eof(_file_handle)	{
-			_file_string += file_text_readln(_file_handle);
-		}
-		return _file_string;
-	}
-
-    file_midi = (_file_midi);
-    file_audio = (_file_audio);
-    file_art = (_file_art);
-	file_info = (_file_info);
-
-    dynamic_stream = audio_create_stream(self.file_audio);
-    dynamic_sprite = sprite_add(self.file_art, 1, false, false, 0, 0);
-	
-	var _json_string = read_file(file_info);
-	track_info = json_parse(_json_string);
-	track_name = track_info.track_name;
-	track_author = track_info.track_author;
-}
-
-function scan_tracks()	{
-	function prepare_path(_file_path) {
-        _file_path = string_replace_all(_file_path, "\\", "/");
-        return _file_path;
-    }
-	tracks_directory = prepare_path(working_directory + "Tracks");
-	tracks_details_all = [];
-
-	if (directory_exists(tracks_directory)) {
-	    var _directory_filter = prepare_path(tracks_directory + "/*");
-	    var _track_path = file_find_first(_directory_filter, fa_directory);
-
-	    while (_track_path != "") {
-	        var _track_path_full = prepare_path(tracks_directory + "/" + _track_path);
-	        var _file_midi = prepare_path(_track_path_full + "/track.mid");
-	        var _file_audio = prepare_path(_track_path_full + "/track.ogg");
-	        var _file_art = prepare_path(_track_path_full + "/track.png");
-			var _file_info =prepare_path( _track_path_full + "/track.json");
-
-	        if not file_exists(_file_midi) {
-	            show_debug_message("Missing MIDI");
-	            continue;
-	        }
-	        if not file_exists(_file_audio) {
-	            show_debug_message("Missing Audio Stream");
-				_track_path = file_find_next();
-	            continue;
-	        }
-	        if not file_exists(_file_art) {
-	            show_debug_message("Missing Art");
-	            _file_art = undefined;
-	        }
-			if not file_exists(_file_info)	{
-				show_debug_message("Missing Info JSON");
-			}
-
-			var _track_details = new TrackDetails(_file_midi, _file_audio, _file_art, _file_info);
-			array_push(tracks_details_all, _track_details);
-	        _track_path = file_find_next();
-	    }
-	    file_find_close();
-	}
-}
 function play_track(_track_details)	{
 	with (Game)	{
 		song_start(_track_details);
@@ -74,11 +7,13 @@ function play_track(_track_details)	{
 }
 function step_scroll()	{
 	var _menu_scroll_input = (mouse_wheel_down() - mouse_wheel_up());
-	menu_scroll_position = clamp(menu_scroll_position + _menu_scroll_input, 0, max(array_length(tracks_details_all) - 5, 0));
+	var _menu_scroll_minimum = 0;
+	var _menu_scroll_maximum = max(array_length(global.tracks_array_all) - 5, 0);
+	menu_scroll_position = clamp(menu_scroll_position + _menu_scroll_input, _menu_scroll_minimum, _menu_scroll_maximum);
 	camera_pos_y = lerp(camera_pos_y, menu_scroll_position * track_entry_height_border, 0.1);
 	
 	with (Game)	{
-		camera_set_pos_y(camera_pos_y);
+		camera_set_pos_y(other.camera_pos_y);
 	}
 }
 function draw_track_entry(_offset_x, _offset_y, _track_details, _is_selected)	{
@@ -124,10 +59,10 @@ function draw_track_entry(_offset_x, _offset_y, _track_details, _is_selected)	{
 	return [_x1, _y1, _x2, _y2];
 }
 function draw_track_entry_all()	{
-	var _track_count_total = array_length(tracks_details_all);
+	var _track_count_total = array_length(global.tracks_array_all);
 	var _track_entry_offset_y = 0;
 	for (var _track_entry_index = 0; _track_entry_index < _track_count_total; _track_entry_index ++)	{
-		var _track_details_current = tracks_details_all[_track_entry_index];
+		var _track_details_current = global.tracks_array_all[_track_entry_index];
 		var _track_is_selected = (_track_entry_index == track_entry_selected);
 		var _offset_x = 0.0;
 		
@@ -159,5 +94,3 @@ track_entry_selected = undefined;
 
 menu_scroll_position = 0.0;
 camera_pos_y = 0;
-
-scan_tracks();

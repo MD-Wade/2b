@@ -1,10 +1,10 @@
 function execute_input(_hand_input) {
     var _note_information = return_note_accuracy(_hand_input);
 	
-	if TweenExists(hand_trigger_tween_instance[_hand_input])	{
-		TweenDestroy(hand_trigger_tween_instance[_hand_input]);
+	if TweenExists(trigger_tween_instance[_hand_input])	{
+		TweenDestroy(trigger_tween_instance[_hand_input]);
 	}
-	hand_trigger_tween_instance[_hand_input] = TweenFire(id, trigger_tween_ease, TWEEN_MODE_ONCE, true, trigger_tween_delay, trigger_tween_duration, TPArray(hand_trigger_tween, _hand_input), 0, 1);
+	trigger_tween_instance[_hand_input] = TweenFire(id, trigger_tween_ease, TWEEN_MODE_ONCE, true, trigger_tween_delay, trigger_tween_duration, TPArray(trigger_tween_value, _hand_input), 0, 1);
 
     if (instance_exists(_note_information[0])) {
         with (_note_information[0]) {
@@ -44,14 +44,14 @@ function return_note_accuracy(_hand_index_check) {
     return [_return_id, _return_accuracy];
 }
 function draw_hand(_hand_index)	{
-	var _hand_trigger_tween = hand_trigger_tween[_hand_index];
+	var _hand_trigger_tween = trigger_tween_value[_hand_index];
 	var _hand_trigger_size_delta = lerp(0, trigger_size_delta, _hand_trigger_tween);
-	var _pos_x1 = hand_pos_x[_hand_index] - (hands_size / 2) - _hand_trigger_size_delta;
-    var _pos_y1 = hand_pos_y[_hand_index] - (hands_size / 2) - _hand_trigger_size_delta;
-    var _pos_x2 = hand_pos_x[_hand_index] + (hands_size / 2) + _hand_trigger_size_delta;
-    var _pos_y2 = hand_pos_y[_hand_index] + (hands_size / 2) + _hand_trigger_size_delta;
+	var _pos_x1 = trigger_pos_x[_hand_index] - (hands_size / 2) - _hand_trigger_size_delta;
+    var _pos_y1 = trigger_pos_y[_hand_index] - (hands_size / 2) - _hand_trigger_size_delta;
+    var _pos_x2 = trigger_pos_x[_hand_index] + (hands_size / 2) + _hand_trigger_size_delta;
+    var _pos_y2 = trigger_pos_y[_hand_index] + (hands_size / 2) + _hand_trigger_size_delta;
     draw_rectangle_width(_pos_x1, _pos_y1, _pos_x2, _pos_y2, 4);
-    draw_text(mean(_pos_x1, _pos_x2), mean(_pos_y1, _pos_y2), chr(hand_button[_hand_index]));
+    draw_text(mean(_pos_x1, _pos_x2), mean(_pos_y1, _pos_y2), chr(trigger_button[_hand_index]));
 }
 function draw_hands()	{
 	draw_set_halign(fa_center);
@@ -76,47 +76,18 @@ function init_hands()	{
 		var _position_y_main = (_position_y_center);
 	
 		// Hand Position
-		hand_pos_x[_iteration] = lerp(_position_x_minimum, _position_x_maximum, _interp_value);
-		hand_pos_y[_iteration] = _position_y_main;
-		hand_trigger_tween[_iteration] = 0;
-		hand_trigger_tween_instance[_iteration] = TweenFire(id, EaseInBounce, TWEEN_MODE_ONCE, true, 0, 0.25, TPArray(hand_trigger_tween, _iteration), 0, 1);
+		trigger_pos_x[_iteration] = lerp(_position_x_minimum, _position_x_maximum, _interp_value);
+		trigger_pos_y[_iteration] = _position_y_main;
+		trigger_tween_value[_iteration] = 0;
+		trigger_tween_instance[_iteration] = TweenFire(id, trigger_tween_ease, TWEEN_MODE_ONCE, true, 0, 0.25, TPArray(trigger_tween_value, _iteration), 0, 1);
 	}
-	switch (global.track_note_hand_count)	{
-		case 2:
-			hand_button[0] = ord("A");
-			hand_button[1] = ord("L");
-			break;
-		
-		case 3:
-			hand_button[0] = ord("A");
-			hand_button[1] = vk_space;
-			hand_button[2] = ord("L");
-			break;
-		
-		case 4:
-			hand_button[0] = ord("A");
-			hand_button[1] = ord("S");
-			hand_button[2] = ord("K");
-			hand_button[3] = ord("L");
-			break;
-		
-		case 5:
-			hand_button[0] = ord("A");
-			hand_button[1] = ord("S");
-			hand_button[2] = vk_space;
-			hand_button[3] = ord("K");
-			hand_button[4] = ord("L");
-			break;
-			
-		case 6:
-			hand_button[0] = ord("A");
-			hand_button[1] = ord("S");
-			hand_button[2] = ord("D");
-			hand_button[3] = ord("J");
-			hand_button[4] = ord("K");
-			hand_button[5] = ord("L");
-			break;
-	}
+	
+	trigger_button[0] = ord("A");
+	trigger_button[1] = ord("S");
+	trigger_button[2] = ord("D");
+	trigger_button[3] = ord("J");
+	trigger_button[4] = ord("K");
+	trigger_button[5] = ord("L");
 }
 
 enum E_STATES_HANDS	{
@@ -129,5 +100,6 @@ trigger_tween_ease = EaseInOutBack;
 trigger_tween_duration = 0.16;
 trigger_tween_delay = 0;
 trigger_size_delta = 12;
+
 
 init_hands();

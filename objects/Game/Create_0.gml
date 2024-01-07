@@ -2,6 +2,30 @@
 
 #macro TIME_TRACK_GRACE_PERIOD 4000
 
+function TrackDetails(_file_midi, _file_audio, _file_art, _file_info) constructor {
+	function read_file(_file_path)	{
+		var _file_handle = file_text_open_read(_file_path);
+		var _file_string = "";
+		while !file_text_eof(_file_handle)	{
+			_file_string += file_text_readln(_file_handle);
+		}
+		return _file_string;
+	}
+
+    file_midi = (_file_midi);
+    file_audio = (_file_audio);
+    file_art = (_file_art);
+	file_info = (_file_info);
+
+    dynamic_stream = audio_create_stream(self.file_audio);
+    dynamic_sprite = sprite_add(self.file_art, 1, false, false, 0, 0);
+	
+	var _json_string = read_file(file_info);
+	track_info = json_parse(_json_string);
+	track_name = track_info.track_name;
+	track_author = track_info.track_author;
+}
+
 function cleanup_stream()	{
 	if audio_is_playing(song_instance)	{
 		audio_stop_sound(song_instance);
@@ -86,8 +110,8 @@ function note_check_place() {
 }
 function note_create(_type, _time_ms)	{
 	var _note_time_remaining = ((global.track_time_current_ms - _time_ms) / 1000);
-	var _perfect_pos_x = Hands.hand_pos_x[_type];
-	var _perfect_pos_y = Hands.hand_pos_y[_type];
+	var _perfect_pos_x = Hands.trigger_pos_x[_type];
+	var _perfect_pos_y = Hands.trigger_pos_y[_type];
 	var _pos_x = _perfect_pos_x;
 	var _pos_y = _perfect_pos_y + (_note_time_remaining * global.track_note_speed_second);
 	var _note_instance = instance_create_layer(_pos_x, _pos_y, "Notes", Note);
@@ -102,7 +126,7 @@ function note_create(_type, _time_ms)	{
 function hands_init()	{
 	hands_center_x = room_width * 0.5;
 	hands_center_y = room_height * 0.75;
-	hands_size = 96;
+	hands_size = 64;
 }
 function hands_create()	{
 	hands_init();
@@ -233,6 +257,69 @@ function song_finish()	{
 	audio_destroy_stream(global.track_stream);
 	room_goto(roomMenu);
 }
+function scan_track(_track_directory) {
+    var _file_midi = prepare_path(_track_directory + "/track.mid");
+    var _file_audio = prepare_path(_track_directory + "/track.ogg");
+    var _file_art = prepare_path(_track_directory + "/track.png");
+    var _file_info = prepare_path(_track_directory + "/track.json");
+
+    if (!file_exists(_file_midi)) {
+        show_debug_message("Missing MIDI");
+        return undefined;
+    }
+    if (!file_exists(_file_audio)) {
+        show_debug_message("Missing Audio Stream");
+        return undefined;
+    }
+    if (!file_exists(_file_art)) {
+        _file_art = undefined; 
+    }
+    if (!file_exists(_file_info)) {
+        show_debug_message("Missing Info JSON");
+    }
+
+    return new TrackDetails(_file_midi, _file_audio, _file_art, _file_info);
+}
+function scan_tracks() {
+	global.tracks_array_all = [];
+    tracks_directory = prepare_path(working_directory + "Tracks");
+
+    if (directory_exists(tracks_directory)) {
+        var _directory_filter = prepare_path(tracks_directory + "/*");
+        var _track_path = file_find_first(_directory_filter, fa_directory);
+
+        while (_track_path != "") {
+            var _track_path_full = prepare_path(tracks_directory + "/" + _track_path);
+            var _track_details = scan_track(_track_path_full);
+            
+            if (not is_undefined(_track_details)) {
+                array_push(global.tracks_array_all, _track_details);
+            }
+
+            _track_path = file_find_next();
+        }
+        file_find_close();
+    }
+	array_sort(global.tracks_array_all, function(_a, _b) {
+        if (_a.track_name < _b.track_name) return -1;
+        if (_a.track_name > _b.track_name) return 1;
+        return 0;
+    });
+}
+function cleanup_tracks()	{
+	for (var _track_entry_index = 0; _track_entry_index < array_length(global.tracks_array_all); _track_entry_index ++)	{
+		var _track_details_current = global.tracks_array_all[_track_entry_index];
+		var _track_audio = _track_details_current.dynamic_stream;
+		var _track_sprite = _track_details_current.dynamic_sprite;
+	
+		if (sprite_exists(_track_sprite))	{
+			sprite_delete(_track_sprite);
+		}
+		if (audio_exists(_track_audio))	{
+			audio_destroy_stream(_track_audio);
+		}
+	}
+}
 function surface_check()	{
 	if !surface_exists(surface_main)	{
 		surface_main = surface_create(room_width, room_height);
@@ -289,12 +376,9 @@ function draw_render_game()	{
 	with (Note)	{
 		draw_note();
 	}
-	
 	with (Hands)	{
 		draw_hands();
 	}
-	
-	draw_score();
 	surface_reset_target();
 	
 	var _draw_pos_direction = ((tween_tick / 12) mod 360);
@@ -357,7 +441,8 @@ function draw_render_game_normal()	{
 		draw_hands();
 	}
 	
-	draw_score();
+	if (room == roomGame)
+		draw_score();
 	surface_reset_target();
 	draw_surface(surface_main, 0, 0);
 }
@@ -388,10 +473,11 @@ global.note_hit_score[E_NOTE_ACCURACY.OKAY] = 35;
 global.note_hit_score[E_NOTE_ACCURACY.GOOD] = 80;
 global.note_hit_score[E_NOTE_ACCURACY.PERFECT] = 100;
 global.note_hit_time[E_NOTE_ACCURACY.MISS] = 300;
-global.note_hit_time[E_NOTE_ACCURACY.OKAY] = 200;
-global.note_hit_time[E_NOTE_ACCURACY.GOOD] = 150;
-global.note_hit_time[E_NOTE_ACCURACY.PERFECT] = 100;
+global.note_hit_time[E_NOTE_ACCURACY.OKAY] = 240;
+global.note_hit_time[E_NOTE_ACCURACY.GOOD] = 160;
+global.note_hit_time[E_NOTE_ACCURACY.PERFECT] = 80;
 
+global.tracks_array_all = [];
 global.track_time_tempo_bpm = -1;
 global.track_time_tempo_bpms = -1;
 global.track_time_playback_factor = 1;
@@ -426,7 +512,7 @@ delta_current = (delta_time / 1000000);
 song_instance = -1;
 song_instance_cooked = false;
 
-depth = -1000;
+depth = -2400;
 
 application_surface_draw_enable(false);
 window_set_size(global.window_res_width, global.window_res_height);
@@ -434,3 +520,4 @@ bktglitch_activate();
 window_center();
 surface_resize(application_surface, global.window_res_width * global.window_res_upscale, global.window_res_height * global.window_res_upscale);
 display_set_gui_size(global.window_res_width, global.window_res_height);
+scan_tracks();

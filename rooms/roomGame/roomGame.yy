@@ -11,7 +11,19 @@
   ],
   "isDnd": false,
   "layers": [
-    {"resourceType":"GMRInstanceLayer","resourceVersion":"1.0","name":"Notes","depth":0,"effectEnabled":true,"effectType":null,"gridX":32,"gridY":32,"hierarchyFrozen":false,"inheritLayerDepth":false,"inheritLayerSettings":false,"inheritSubLayers":true,"inheritVisibility":true,"instances":[],"layers":[],"properties":[],"userdefinedDepth":false,"visible":true,},
+    {"resourceType":"GMRInstanceLayer","resourceVersion":"1.0","name":"Notes","depth":0,"effectEnabled":true,"effectType":"_filter_dots","gridX":32,"gridY":32,"hierarchyFrozen":false,"inheritLayerDepth":false,"inheritLayerSettings":false,"inheritSubLayers":true,"inheritVisibility":true,"instances":[],"layers":[],"properties":[
+        {"name":"g_DotsScale","type":0,"value":"48",},
+        {"name":"g_DotsSize","type":0,"value":"0.4",},
+        {"name":"g_DotsSize","type":0,"value":"0.6",},
+        {"name":"g_DotsOffset","type":0,"value":"0",},
+        {"name":"g_DotsOffset","type":0,"value":"0",},
+        {"name":"g_DotsDisplacement","type":0,"value":"1",},
+        {"name":"g_DotsSpeed","type":0,"value":"1",},
+        {"name":"g_DotsColourSpeed","type":0,"value":"1",},
+        {"name":"g_DotsColours","type":0,"value":"256",},
+        {"name":"g_DotsSharpness","type":0,"value":"0.335",},
+        {"name":"g_DotsPalette","type":2,"value":null,},
+      ],"userdefinedDepth":false,"visible":true,},
     {"resourceType":"GMRInstanceLayer","resourceVersion":"1.0","name":"Instances","depth":100,"effectEnabled":true,"effectType":null,"gridX":32,"gridY":32,"hierarchyFrozen":false,"inheritLayerDepth":false,"inheritLayerSettings":false,"inheritSubLayers":true,"inheritVisibility":true,"instances":[
         {"resourceType":"GMRInstance","resourceVersion":"1.0","name":"inst_2C71EC51","colour":4294967295,"frozen":false,"hasCreationCode":false,"ignore":false,"imageIndex":0,"imageSpeed":1.0,"inheritCode":false,"inheritedItemId":null,"inheritItemSettings":false,"isDnd":false,"objectId":{"name":"TileBackground","path":"objects/TileBackground/TileBackground.yy",},"properties":[],"rotation":0.0,"scaleX":1.0,"scaleY":1.0,"x":0.0,"y":0.0,},
       ],"layers":[],"properties":[],"userdefinedDepth":false,"visible":true,},
