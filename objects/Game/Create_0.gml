@@ -83,7 +83,6 @@ function note_score_execute(_note_accuracy)	{
 	audio_play_sound(global.note_hit_sound[_note_accuracy], 1, false);
 }
 function note_check_place() {
-	show_debug_message(midi_note_placed);
 	if (array_length(midi_note_timings) > 0)	{
 		var _note_current = midi_note_timings[0];
 		if !is_undefined(_note_current)	{
@@ -110,6 +109,7 @@ function note_check_place() {
 }
 function note_create(_type, _time_ms)	{
 	var _note_time_remaining = ((global.track_time_current_ms - _time_ms) / 1000);
+	show_debug_message(_type);
 	var _perfect_pos_x = Hands.trigger_pos_x[_type];
 	var _perfect_pos_y = Hands.trigger_pos_y[_type];
 	var _pos_x = _perfect_pos_x;
@@ -251,6 +251,7 @@ function song_load_notes()	{
 	array_sort(midi_note_timings, function(note1, note2) {
         return note1.time_ms - note2.time_ms;
     });
+	global.track_note_count = array_length(midi_information_notes);
 	show_debug_message("Loaded this track (" + global.track_details_current.track_name + ")" + " with number of notes (" + string(array_length(midi_note_timings)) + ").");
 }
 function song_play_audio()	{
@@ -347,15 +348,6 @@ function surface_check()	{
 		surface_reset_target();
 	}
 }
-function draw_score()	{
-	var _pos_x = room_width / 2;
-	var _pos_y = room_height - 16;
-	draw_set_halign(fa_center);
-	draw_set_valign(fa_bottom);
-	draw_set_colour(c_white);
-	draw_set_font(fontScore);
-	draw_text(_pos_x, _pos_y, "SCORE: " + string(global.game_score));
-}
 function draw_fade()	{
 	room_fade_in = approach(room_fade_in, 0, 0.001 * global.delta_multiplier);
 	draw_set_alpha(max(room_fade_out, room_fade_in));
@@ -363,20 +355,31 @@ function draw_fade()	{
 	draw_rectangle(0, 0, room_width, room_height, false);
 	draw_set_alpha(1);
 }
-function draw_text_notes() {
+function draw_score() {
     var _note_types = ["Perfect", "Good", "Okay", "Missed"];
     var _note_accuracy = [E_NOTE_ACCURACY.PERFECT, E_NOTE_ACCURACY.GOOD, E_NOTE_ACCURACY.OKAY, E_NOTE_ACCURACY.MISS];
     
     draw_set_halign(fa_left);
     draw_set_valign(fa_top);
     draw_set_colour(c_white);
+	draw_set_font(fontScore);
 
-    for (var _note_type_index = 0; _note_type_index < array_length(_note_types); _note_type_index ++) {
+    for (var _note_type_index = 0; _note_type_index < array_length(_note_types); _note_type_index++) {
         var _pos_y = 32 + 32 * _note_type_index;
+        var _pos_x = 32 + wave(0, 10, 2, _note_type_index * 0.1);
         var _note_text = _note_types[_note_type_index] + ": " + string(global.track_note_accuracy[_note_accuracy[_note_type_index]]);
-        draw_text(32, _pos_y, _note_text);
+        draw_text(_pos_x, _pos_y, _note_text);
     }
-    draw_text(32, 32 + 32 * array_length(_note_types), "Total: " + string(global.track_note_hit_count) + "/" + string(global.track_note_count));
+
+    var _next_line_index = array_length(_note_types);
+    var _score_pos_x = 32 + wave(0, 10, 2, _next_line_index * 0.1);
+    var _score_pos_y = 32 + 32 * _next_line_index;
+    draw_set_halign(fa_left);
+    draw_set_valign(fa_top);
+    draw_text(_score_pos_x, _score_pos_y, "SCORE: " + string(global.game_score));
+
+    var _total_text = "Total: " + string(global.track_note_hit_count) + "/" + string(global.track_note_count);
+    draw_text(32, 32 + 32 * (_next_line_index + 1), _total_text);
 }
 function draw_render_game()	{
 	surface_check();
@@ -463,11 +466,9 @@ function draw_render_game_normal()	{
 		draw_hands();
 	}
 	
-	if (room == roomGame)	{
-		draw_set_font(fontAccuracy);
+	if (room == roomGame)
 		draw_score();
-		draw_text_notes();
-	}
+
 	surface_reset_target();
 	draw_surface(surface_main, 0, 0);
 }
@@ -476,7 +477,7 @@ randomize();
 
 global.window_res_width = 1280;
 global.window_res_height = 720;
-global.window_res_upscale = 4;
+global.window_res_upscale = 1;
 
 global.delta_current = (1 / game_get_speed(gamespeed_fps));
 global.delta_multiplier = (1);
@@ -532,8 +533,6 @@ tween_tick = 0;
 draw_surface_clear_tick = 0;
 draw_surface_clear_target = 0.25;
 draw_surface_clear_alpha = (0.01);
-gui_scale_ratio_x = (global.window_res_upscale);
-gui_scale_ratio_y = (global.window_res_upscale);
 window_centered = true;
 hands_center_x = room_width * 0.5;
 hands_center_y = room_height * 0.75;
@@ -545,7 +544,6 @@ song_instance_cooked = false;
 
 depth = -2400;
 
-application_surface_draw_enable(false);
 window_set_size(global.window_res_width, global.window_res_height);
 bktglitch_activate();
 window_center();

@@ -8,11 +8,13 @@ function execute_action(_in_action, _in_accuracy)	{
 		note_score_execute(_in_accuracy);
 	}
 
+	global.track_note_accuracy[_in_accuracy] ++;
 	switch (_in_action)	{
 		case 0:
 			state_current = E_STATES_NOTE.COLLECTED;
 			note_perfecting_start_x = x;
 			note_perfecting_start_y = y;
+			global.track_note_hit_count ++;
 			if (_in_accuracy == E_NOTE_ACCURACY.PERFECT)	{
 				state_tick = 0;
 				state_tick_target = note_perfecting_time;

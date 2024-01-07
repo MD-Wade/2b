@@ -38,7 +38,6 @@ function return_note_accuracy(_hand_index_check) {
         with (_note_id) {
             _return_id = _note_id;
             _return_accuracy = return_accuracy();
-			global.track_note_accuracy[_return_accuracy] ++;
         }
     }
 
@@ -83,9 +82,9 @@ function init_hands()	{
 		trigger_tween_instance[_iteration] = TweenFire(id, trigger_tween_ease, TWEEN_MODE_ONCE, true, 0, 0.25, TPArray(trigger_tween_value, _iteration), 0, 1);
 	}
 	
-	trigger_button[0] = ord("A");
-	trigger_button[1] = ord("S");
-	trigger_button[2] = ord("D");
+	trigger_button[0] = ord("S");
+	trigger_button[1] = ord("D");
+	trigger_button[2] = ord("F");
 	trigger_button[3] = ord("J");
 	trigger_button[4] = ord("K");
 	trigger_button[5] = ord("L");
@@ -100,7 +99,7 @@ hands_size = 0;
 trigger_tween_ease = EaseInOutBack;
 trigger_tween_duration = 0.16;
 trigger_tween_delay = 0;
-trigger_size_delta = 12;
+trigger_size_delta = 8;
 
 
 init_hands();
