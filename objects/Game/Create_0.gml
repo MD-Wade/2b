@@ -143,6 +143,13 @@ function song_start(_track_details)	{
 	room_goto(roomGame);
 }
 function song_load(_track_details)	{
+	global.track_note_hit_count = 0;
+	global.track_note_count = 0;
+	global.track_note_accuracy[E_NOTE_ACCURACY.MISS] = 0;
+	global.track_note_accuracy[E_NOTE_ACCURACY.OKAY] = 0;
+	global.track_note_accuracy[E_NOTE_ACCURACY.GOOD] = 0;
+	global.track_note_accuracy[E_NOTE_ACCURACY.PERFECT] = 0;
+
 	midi_note_placed = false;
 	midi_note_placed_finished = false;
 	song_load_midi(_track_details);
@@ -356,6 +363,21 @@ function draw_fade()	{
 	draw_rectangle(0, 0, room_width, room_height, false);
 	draw_set_alpha(1);
 }
+function draw_text_notes() {
+    var _note_types = ["Perfect", "Good", "Okay", "Missed"];
+    var _note_accuracy = [E_NOTE_ACCURACY.PERFECT, E_NOTE_ACCURACY.GOOD, E_NOTE_ACCURACY.OKAY, E_NOTE_ACCURACY.MISS];
+    
+    draw_set_halign(fa_left);
+    draw_set_valign(fa_top);
+    draw_set_colour(c_white);
+
+    for (var _note_type_index = 0; _note_type_index < array_length(_note_types); _note_type_index ++) {
+        var _pos_y = 32 + 32 * _note_type_index;
+        var _note_text = _note_types[_note_type_index] + ": " + string(global.track_note_accuracy[_note_accuracy[_note_type_index]]);
+        draw_text(32, _pos_y, _note_text);
+    }
+    draw_text(32, 32 + 32 * array_length(_note_types), "Total: " + string(global.track_note_hit_count) + "/" + string(global.track_note_count));
+}
 function draw_render_game()	{
 	surface_check();
 	
@@ -441,8 +463,11 @@ function draw_render_game_normal()	{
 		draw_hands();
 	}
 	
-	if (room == roomGame)
+	if (room == roomGame)	{
+		draw_set_font(fontAccuracy);
 		draw_score();
+		draw_text_notes();
+	}
 	surface_reset_target();
 	draw_surface(surface_main, 0, 0);
 }
@@ -483,7 +508,13 @@ global.track_time_tempo_bpms = -1;
 global.track_time_playback_factor = 1;
 global.track_time_current_ms = 0;
 global.track_note_hand_count = 0;
+global.track_note_hit_count = 0;
+global.track_note_count = 0;
 global.game_score = 0;
+global.track_note_accuracy[E_NOTE_ACCURACY.MISS] = 0;
+global.track_note_accuracy[E_NOTE_ACCURACY.OKAY] = 0;
+global.track_note_accuracy[E_NOTE_ACCURACY.GOOD] = 0;
+global.track_note_accuracy[E_NOTE_ACCURACY.PERFECT] = 0;
 
 midi_information_notes = [];
 midi_information_events = [];

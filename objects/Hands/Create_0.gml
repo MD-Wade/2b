@@ -38,6 +38,7 @@ function return_note_accuracy(_hand_index_check) {
         with (_note_id) {
             _return_id = _note_id;
             _return_accuracy = return_accuracy();
+			global.track_note_accuracy[_return_accuracy] ++;
         }
     }
 
