@@ -32,6 +32,7 @@
     {"name":"TGMX_7_Properties","order":9,"path":"scripts/TGMX_7_Properties/TGMX_7_Properties.yy",},
     {"name":"EaseMidSlow","order":2,"path":"animcurves/EaseMidSlow/EaseMidSlow.yy",},
     {"name":"TGMX_Experimental","order":12,"path":"scripts/TGMX_Experimental/TGMX_Experimental.yy",},
+    {"name":"shdGrayscale","order":4,"path":"shaders/shdGrayscale/shdGrayscale.yy",},
     {"name":"TGMX_2_EaseFunctions","order":4,"path":"scripts/TGMX_2_EaseFunctions/TGMX_2_EaseFunctions.yy",},
     {"name":"TGMX_Terms_of_Use","order":1,"path":"notes/TGMX_Terms_of_Use/TGMX_Terms_of_Use.yy",},
     {"name":"fontTime","order":2,"path":"fonts/fontTime/fontTime.yy",},

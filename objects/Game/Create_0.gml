@@ -96,7 +96,7 @@ function note_check_place() {
 			}
 		}
 	}	else	{
-		midi_note_placed_finished = not instance_exists(Note);
+		midi_note_placed_finished = not instance_exists(Note) or room_fade_manual;
 		if (midi_note_placed_finished)	{
 			room_fade_out = approach(room_fade_out, 1, 0.002);
 	        audio_sound_gain(song_instance, 1 - room_fade_out, 0);
@@ -109,7 +109,6 @@ function note_check_place() {
 }
 function note_create(_type, _time_ms)	{
 	var _note_time_remaining = ((global.track_time_current_ms - _time_ms) / 1000);
-	show_debug_message(_type);
 	var _perfect_pos_x = Hands.trigger_pos_x[_type];
 	var _perfect_pos_y = Hands.trigger_pos_y[_type];
 	var _pos_x = _perfect_pos_x;
@@ -122,6 +121,7 @@ function note_create(_type, _time_ms)	{
 	_note_instance.note_perfecting_end_y = _perfect_pos_y;
 	_note_instance.note_size_base = hands_size;
 	_note_instance.note_size = hands_size;
+	_note_instance.image_blend = global.note_type_colour[_type];
 }
 function hands_init()	{
 	hands_center_x = room_width * 0.5;
@@ -171,7 +171,6 @@ function song_load_bpm()	{
 	global.track_time_tempo_bpms = (global.track_time_tempo_bpm / 60000);
 	global.track_time_current_ms = (TIME_TRACK_GRACE_PERIOD * -1);
 	global.track_time_ppq = 96;
-	global.track_note_speed_second = 512;
 	global.track_note_speed_frame = global.track_note_speed_second / game_get_speed(gamespeed_fps);
 	midi_note_spawn_offset = (room_height / global.track_note_speed_second) * 1000;
 
@@ -262,6 +261,7 @@ function song_play_audio()	{
 function song_finish()	{
 	song_instance_cooked = false;
 	room_fade_out = 0;
+	room_fade_manual = false;
 	audio_destroy_stream(global.track_stream);
 	room_goto(roomMenu);
 }
@@ -443,34 +443,8 @@ function draw_render_game()	{
 	surface_copy(surface_aux1, 0, 0, surface_aux2);
 }
 function draw_render_game_normal()	{
-	surface_check();
-	
-	with (TileBackground)	{
-		surface_check();
-		shader_set(shdEarthboundBoth);
-		shader_set_uniform_f(shader_get_uniform(shdEarthboundBoth, "speed"), 0.0001);
-		shader_set_uniform_f(shader_get_uniform(shdEarthboundBoth, "frequency"), 4.0);
-		shader_set_uniform_f(shader_get_uniform(shdEarthboundBoth, "size"), 0.01);
-		shader_set_uniform_f(shader_get_uniform(shdEarthboundBoth, "time"), current_time);
-		draw_surface_center_ext(surface, room_width / 2, room_height / 2, 1.5, 1.5, 0, c_white, 0.6);
-		shader_reset();
-	}
-	
-	surface_set_target(surface_main);
-	draw_clear_alpha(c_black, 0);
-	
-	with (Note)	{
-		draw_note();
-	}	
-	with (Hands)	{
-		draw_hands();
-	}
-	
 	if (room == roomGame)
 		draw_score();
-
-	surface_reset_target();
-	draw_surface(surface_main, 0, 0);
 }
 
 randomize();
@@ -498,10 +472,17 @@ global.note_hit_score[E_NOTE_ACCURACY.MISS] = -100;
 global.note_hit_score[E_NOTE_ACCURACY.OKAY] = 35;
 global.note_hit_score[E_NOTE_ACCURACY.GOOD] = 80;
 global.note_hit_score[E_NOTE_ACCURACY.PERFECT] = 100;
-global.note_hit_time[E_NOTE_ACCURACY.MISS] = 300;
-global.note_hit_time[E_NOTE_ACCURACY.OKAY] = 240;
-global.note_hit_time[E_NOTE_ACCURACY.GOOD] = 160;
-global.note_hit_time[E_NOTE_ACCURACY.PERFECT] = 80;
+global.note_hit_time[E_NOTE_ACCURACY.MISS] = 240;
+global.note_hit_time[E_NOTE_ACCURACY.OKAY] = 180;
+global.note_hit_time[E_NOTE_ACCURACY.GOOD] = 120;
+global.note_hit_time[E_NOTE_ACCURACY.PERFECT] = 60;
+global.note_type_colour[0] = c_red;
+global.note_type_colour[1] = c_yellow;
+global.note_type_colour[2] = c_aqua;
+global.note_type_colour[3] = global.note_type_colour[2];
+global.note_type_colour[4] = global.note_type_colour[1];
+global.note_type_colour[5] = global.note_type_colour[0];
+global.track_note_speed_second = 768;
 
 global.tracks_array_all = [];
 global.track_time_tempo_bpm = -1;
@@ -526,6 +507,7 @@ midi_note_placed = false;
 midi_note_placed_finished = false;
 room_fade_in = 0;
 room_fade_out = 0;
+room_fade_manual = false;
 surface_main = -1;
 surface_aux1 = -1;
 surface_aux2 = -1;

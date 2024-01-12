@@ -25,7 +25,7 @@ function return_note_accuracy(_hand_index_check) {
     with (Note) {
         if (note_type == _hand_index_check) {
 			if (state_current == E_STATES_NOTE.FREEFALL)	{
-				var _note_lowest_check = abs(global.track_time_current_ms - note_time_ideal);
+				var _note_lowest_check = (note_time_ideal - global.track_time_current_ms);
 	            if (_note_lowest_check <= _note_lowest_current) {
 	                _note_id = id;
 	                _note_lowest_current = _note_lowest_check;
@@ -50,13 +50,23 @@ function draw_hand(_hand_index)	{
     var _pos_y1 = trigger_pos_y[_hand_index] - (hands_size / 2) - _hand_trigger_size_delta;
     var _pos_x2 = trigger_pos_x[_hand_index] + (hands_size / 2) + _hand_trigger_size_delta;
     var _pos_y2 = trigger_pos_y[_hand_index] + (hands_size / 2) + _hand_trigger_size_delta;
+	draw_set_colour(global.note_type_colour[_hand_index]);
     draw_rectangle_width(_pos_x1, _pos_y1, _pos_x2, _pos_y2, 4);
     draw_text(mean(_pos_x1, _pos_x2), mean(_pos_y1, _pos_y2), chr(trigger_button[_hand_index]));
 }
 function draw_hands()	{
+	var _back_border = 8;
+	var _back_x1 = (trigger_pos_x[0] - (hands_size + _back_border));
+	var _back_y1 = (0);
+	var _back_x2 = (trigger_pos_x[global.track_note_hand_count - 1] + (hands_size + _back_border));
+	var _back_y2 = (room_height);
+	draw_set_alpha(0.9);
+	draw_set_colour(c_black);
+	draw_rectangle(_back_x1, _back_y1, _back_x2, _back_y2, false);
+	draw_set_alpha(1.0);
+	
 	draw_set_halign(fa_center);
 	draw_set_valign(fa_middle);
-	draw_set_colour(c_white);
     for (var _hand_index = 0; _hand_index < global.track_note_hand_count; _hand_index ++) {
 		draw_hand(_hand_index);
     }

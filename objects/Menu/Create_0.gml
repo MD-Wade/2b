@@ -1,5 +1,3 @@
-/// @description Initialize
-
 function play_track(_track_details)	{
 	with (Game)	{
 		song_start(_track_details);
@@ -9,9 +7,15 @@ function step_scroll()	{
 	var _menu_scroll_input = (mouse_wheel_down() - mouse_wheel_up());
 	var _menu_scroll_minimum = 0;
 	var _menu_scroll_maximum = max(array_length(global.tracks_array_all) - 5, 0);
-	menu_scroll_position = clamp(menu_scroll_position + _menu_scroll_input, _menu_scroll_minimum, _menu_scroll_maximum);
-	camera_pos_y = lerp(camera_pos_y, menu_scroll_position * track_entry_height_border, 0.1);
 	
+	if (_menu_scroll_input != 0)	{
+		if !is_undefined(camera_tween_instance)	{
+			TweenDestroy(camera_tween_instance);
+		}
+		menu_scroll_position = clamp(menu_scroll_position + _menu_scroll_input, _menu_scroll_minimum, _menu_scroll_maximum);
+		var _camera_target_y = menu_scroll_position * track_entry_height_border;
+		camera_tween_instance = TweenFire(id, camera_tween_type, TWEEN_MODE_ONCE, true, 0, camera_tween_duration, "camera_pos_y", camera_pos_y, _camera_target_y);  
+	}
 	with (Game)	{
 		camera_set_pos_y(other.camera_pos_y);
 	}
@@ -23,10 +27,6 @@ function draw_track_entry(_offset_x, _offset_y, _track_details, _is_selected)	{
 	var _text_scale_author = 0.5;
 	var _sprite_pos_x = (_pos_x + (track_entry_border / 2));
 	var _sprite_pos_y = (_pos_y + (track_entry_border / 2));
-	var _text_title_pos_x = (_sprite_pos_x + track_entry_button_width + track_entry_border);
-	var _text_title_pos_y = (_sprite_pos_y);
-	var _text_author_pos_x = (_text_title_pos_x);
-	var _text_author_pos_y = (_text_title_pos_y + (string_height(_track_details.track_name) * _text_scale_title));
 	var _track_sprite = _track_details.dynamic_sprite;
 	
 	var _x1 = _pos_x;
@@ -48,12 +48,20 @@ function draw_track_entry(_offset_x, _offset_y, _track_details, _is_selected)	{
 	draw_set_halign(fa_left);
 	draw_set_valign(fa_top);
 	draw_set_font(fontScore);
+	
+	var _text_split_width = (track_entry_width - (track_entry_border * 2));
+	var _title_height = string_height_ext(_track_details.track_name, -1, _text_split_width) * _text_scale_title;
+	var _text_title_pos_x = (_sprite_pos_x + track_entry_button_width + track_entry_border);
+	var _text_title_pos_y = (_sprite_pos_y);
+	var _text_author_pos_x = (_text_title_pos_x);
+	var _text_author_pos_y = (_text_title_pos_y + _title_height);
+	
 	draw_set_colour(_colour_background);
 	draw_rectangle(_x1, _y1, _x2, _y2, false);
 	draw_set_colour(_colour_text_title);
-	draw_text_transformed(_text_title_pos_x, _text_title_pos_y, _track_details.track_name, _text_scale_title, _text_scale_title, 0);
+	draw_text_ext_transformed(_text_title_pos_x, _text_title_pos_y, _track_details.track_name, -1, _text_split_width, _text_scale_title, _text_scale_title, 0);
 	draw_set_colour(_colour_text_author);
-	draw_text_transformed(_text_author_pos_x, _text_author_pos_y, _track_details.track_author, _text_scale_author, _text_scale_author, 0);
+	draw_text_ext_transformed(_text_author_pos_x, _text_author_pos_y, _track_details.track_author, -1, _text_split_width, _text_scale_author, _text_scale_author, 0);
 	draw_set_colour(c_white);
 	draw_sprite_stretched(_track_sprite, 0, _sprite_pos_x, _sprite_pos_y, track_entry_button_width, track_entry_button_height);
 	return [_x1, _y1, _x2, _y2];
@@ -81,9 +89,9 @@ function draw_track_entry_all()	{
 	}
 }
 
-track_entry_border = 4;
-track_entry_button_width = 128;
-track_entry_button_height = 128;
+track_entry_border = 8;
+track_entry_button_width = 256;
+track_entry_button_height = 256;
 track_entry_width = (room_width - (track_entry_border * 2));
 track_entry_height = (track_entry_button_height + track_entry_border);
 track_entry_height_border = (track_entry_height + track_entry_border);
@@ -94,3 +102,6 @@ track_entry_selected = undefined;
 
 menu_scroll_position = 0.0;
 camera_pos_y = 0;
+camera_tween_type = EaseInOutSine;
+camera_tween_duration = 0.25;
+camera_tween_instance = undefined;

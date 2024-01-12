@@ -62,16 +62,16 @@ function step_perfecting()	{
 	}
 }
 function return_accuracy() {
-    var _note_time_diff = global.track_time_current_ms - note_time_ideal;
-    var _note_time_current = abs(_note_time_diff);
+    var _note_time_diff = abs(global.track_time_current_ms - note_time_ideal);
+	show_debug_message(_note_time_diff);
 
-    if (_note_time_current < (global.note_hit_time[E_NOTE_ACCURACY.PERFECT])) {
+    if (_note_time_diff < (global.note_hit_time[E_NOTE_ACCURACY.PERFECT])) {
         return E_NOTE_ACCURACY.PERFECT;
     }
-    else if (_note_time_current < (global.note_hit_time[E_NOTE_ACCURACY.GOOD])) {
+    else if (_note_time_diff < (global.note_hit_time[E_NOTE_ACCURACY.GOOD])) {
         return E_NOTE_ACCURACY.GOOD;
     }
-    else if (_note_time_current < (global.note_hit_time[E_NOTE_ACCURACY.OKAY])) {
+    else if (_note_time_diff < (global.note_hit_time[E_NOTE_ACCURACY.OKAY])) {
         return E_NOTE_ACCURACY.OKAY;
     }
     else return E_NOTE_ACCURACY.MISS;
