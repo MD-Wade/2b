@@ -11,4 +11,8 @@ switch (room)	{
 		hands_create();
 		room_fade_in = 1;
 		break;
+		
+	case roomOffsetSound:
+		camera_init();
+		break;
 }

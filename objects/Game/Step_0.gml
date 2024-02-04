@@ -1,7 +1,7 @@
 switch (room)	{
 	case roomInit:
-		if (window_centered)	{
-			room_goto_next();
+		if (initialized_window and initialized_camera)	{
+			room_goto(roomOffsetSound);
 		}
 		break;
 		

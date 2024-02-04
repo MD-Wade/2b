@@ -97,7 +97,7 @@ note_perfecting_start_x = undefined;
 note_perfecting_start_y = undefined;
 note_perfecting_end_x = undefined;
 note_perfecting_end_y = undefined;
-note_perfecting_time = 0.12;
+note_perfecting_time = 0.08;
 
 note_hit_type = E_NOTE_ACCURACY.MISS;
 

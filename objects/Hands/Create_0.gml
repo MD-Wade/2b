@@ -60,7 +60,8 @@ function draw_hands()	{
 	var _back_y1 = (0);
 	var _back_x2 = (trigger_pos_x[global.track_note_hand_count - 1] + (hands_size + _back_border));
 	var _back_y2 = (room_height);
-	draw_set_alpha(0.9);
+	
+	draw_set_alpha(0.5);
 	draw_set_colour(c_black);
 	draw_rectangle(_back_x1, _back_y1, _back_x2, _back_y2, false);
 	draw_set_alpha(1.0);

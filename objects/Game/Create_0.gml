@@ -25,6 +25,24 @@ function TrackDetails(_file_midi, _file_audio, _file_art, _file_info) constructo
 	track_name = track_info.track_name;
 	track_author = track_info.track_author;
 }
+function SaveData(_save_struct) constructor	{
+	function save()	{
+		with (Game)	{
+			save_data_save();
+		}
+	}
+	function load(_save_struct)	{
+		setting_offset_audio = _save_struct.setting_offset_audio;
+		setting_offset_audio_performed = _save_struct.setting_offset_audio_performed;
+	}
+	
+	setting_offset_audio = 0;
+	setting_offset_audio_performed = false;
+	
+	if not is_undefined(_save_struct)	{
+		load(_save_struct);
+	}
+}
 
 function cleanup_stream()	{
 	if audio_is_playing(song_instance)	{
@@ -58,6 +76,7 @@ function camera_init()	{
 	camera_set_view_size(camera, camera_width, camera_height);
 	view_set_camera(0, camera);
 	camera_apply(camera);
+	initialized_camera = true;
 }
 function camera_set_pos_x(_pos_x)	{
 	camera_pos_x = _pos_x;
@@ -175,7 +194,7 @@ function song_load_bpm()	{
 	midi_note_spawn_offset = (room_height / global.track_note_speed_second) * 1000;
 
 	var _ticks_per_minute = global.track_time_tempo_bpm * global.track_time_ppq;
-	global.track_time_tick_duration_seconds = (60) / _ticks_per_minute / global.track_time_playback_factor;
+	global.track_time_tick_duration_seconds = (60) / _ticks_per_minute;
 }
 function song_load_midi(_track_details)	{
 	midi_information_array = midi_read(_track_details.file_midi, false);
@@ -235,7 +254,7 @@ function song_load_notes()	{
 
 	function NoteTime(_hand_index, _time_ms) constructor	{
 		hand_index = _hand_index;
-		time_ms = _time_ms;
+		time_ms = _time_ms + global.save_object.setting_offset_audio;
 	}
 
 	for (var _note_index = 0; _note_index < array_length(midi_information_notes); _note_index ++)	{
@@ -446,6 +465,32 @@ function draw_render_game_normal()	{
 	if (room == roomGame)
 		draw_score();
 }
+function save_data_save()	{
+	file_delete(save_file_name);
+	var _file_handle = file_text_open_write(save_file_name);
+	var _file_content = json_stringify(global.save_object, true);
+	file_text_write_string(_file_handle, _file_content);
+	file_text_close(_file_handle);
+	show_debug_message(_file_content);
+	show_debug_message("Saved save file");
+}
+function save_data_load()	{
+	if (file_exists(save_file_name))	{
+		show_debug_message("Previous save file found");
+		var _file_handle = file_text_open_read(save_file_name);
+		var _file_content = "";
+		while not file_text_eof(_file_handle)	{
+			_file_content += file_text_readln(_file_handle);
+		}
+		file_text_close(_file_handle);
+		var _save_struct = json_parse(_file_content);
+		global.save_object = new SaveData(_save_struct);
+		show_debug_message(global.save_object);
+	}	else	{
+		show_debug_message("No save found");
+		global.save_object = new SaveData();
+	}
+}
 
 randomize();
 
@@ -515,7 +560,6 @@ tween_tick = 0;
 draw_surface_clear_tick = 0;
 draw_surface_clear_target = 0.25;
 draw_surface_clear_alpha = (0.01);
-window_centered = true;
 hands_center_x = room_width * 0.5;
 hands_center_y = room_height * 0.75;
 hands_size = 96;
@@ -523,9 +567,16 @@ delta_target = (1 / game_get_speed(gamespeed_fps));
 delta_current = (delta_time / 1000000);
 song_instance = -1;
 song_instance_cooked = false;
+save_file_name = game_save_id + "save.json";
+initialized_window = true;
+initialized_camera = false;
 
 depth = -2400;
 
+save_data_load();
+save_data_save();
+
+camera_init();
 window_set_size(global.window_res_width, global.window_res_height);
 bktglitch_activate();
 window_center();

@@ -6,7 +6,7 @@ function play_track(_track_details)	{
 function step_scroll()	{
 	var _menu_scroll_input = (mouse_wheel_down() - mouse_wheel_up());
 	var _menu_scroll_minimum = 0;
-	var _menu_scroll_maximum = max(array_length(global.tracks_array_all) - 5, 0);
+	var _menu_scroll_maximum = max(array_length(global.tracks_array_all) - 4, 0);
 	
 	if (_menu_scroll_input != 0)	{
 		if !is_undefined(camera_tween_instance)	{
@@ -18,6 +18,11 @@ function step_scroll()	{
 	}
 	with (Game)	{
 		camera_set_pos_y(other.camera_pos_y);
+	}
+	
+	if keyboard_check_pressed(vk_escape)	{
+		global.save_object.setting_offset_audio_performed = false;
+		room_goto(roomOffsetSound);
 	}
 }
 function draw_track_entry(_offset_x, _offset_y, _track_details, _is_selected)	{
