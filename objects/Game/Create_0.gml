@@ -1,8 +1,8 @@
 // initialize
-
+show_debug_message("hi")
 #macro TIME_TRACK_GRACE_PERIOD 4000
 
-function TrackDetails(_file_midi, _file_audio, _file_art, _file_info) constructor {
+function TrackDetails(_file_midi, _file_audio_backing, _file_audio_input, _file_art, _file_info) constructor {
 	function read_file(_file_path)	{
 		var _file_handle = file_text_open_read(_file_path);
 		var _file_string = "";
@@ -13,11 +13,13 @@ function TrackDetails(_file_midi, _file_audio, _file_art, _file_info) constructo
 	}
 
     file_midi = (_file_midi);
-    file_audio = (_file_audio);
+    file_audio_backing = (_file_audio_backing);
+	file_audio_input = (_file_audio_input);
     file_art = (_file_art);
 	file_info = (_file_info);
 
-    dynamic_stream = audio_create_stream(self.file_audio);
+    dynamic_stream_backing = audio_create_stream(self.file_audio_backing);
+	dynamic_stream_input = audio_create_stream(self.file_audio_input);
     dynamic_sprite = sprite_add(self.file_art, 1, false, false, 0, 0);
 	
 	var _json_string = read_file(file_info);
@@ -97,6 +99,7 @@ function note_score_execute(_note_accuracy)	{
 	if midi_note_placed	{
 		if not midi_note_placed_finished	{
 			global.game_score += global.note_hit_score[_note_accuracy];
+			global.track_input_volume_value = clamp(global.track_input_volume_value + global.note_hit_audio_volume[_note_accuracy], 0, 100);
 		}
 	}
 	audio_play_sound(global.note_hit_sound[_note_accuracy], 1, false);
@@ -158,7 +161,8 @@ function hands_create()	{
 }
 function song_start(_track_details)	{
 	global.track_details_current = _track_details;
-	global.track_stream = audio_create_stream(_track_details.file_audio);
+	global.track_stream_backing = audio_create_stream(_track_details.file_audio_backing);
+	global.track_stream_input = audio_create_stream(_track_details.file_audio_input);
 	room_goto(roomGame);
 }
 function song_load(_track_details)	{
@@ -270,23 +274,27 @@ function song_load_notes()	{
         return note1.time_ms - note2.time_ms;
     });
 	global.track_note_count = array_length(midi_information_notes);
-	show_debug_message("Loaded this track (" + global.track_details_current.track_name + ")" + " with number of notes (" + string(array_length(midi_note_timings)) + ").");
+	show_debug_message("Loaded this track (" + global.track_details_current.track_name + ")" + " with number of notes (" + string(array_length(midi_note_timings)) + ") and unique note count (" + string(_unique_note_count) + ").");
 }
 function song_play_audio()	{
-	song_instance = audio_play_sound(global.track_stream, 1, false);
-	song_instance_cooked = false;
-	audio_sound_pitch(song_instance, global.track_time_playback_factor);
+	song_instance_sync_group = audio_create_sync_group(false);
+	audio_play_in_sync_group(song_instance_sync_group, global.track_stream_backing);
+	audio_play_in_sync_group(song_instance_sync_group, global.track_stream_input);
+	audio_start_sync_group(song_instance_sync_group);
 }
 function song_finish()	{
 	song_instance_cooked = false;
 	room_fade_out = 0;
 	room_fade_manual = false;
-	audio_destroy_stream(global.track_stream);
+	audio_destroy_stream(global.track_stream_input);
+	audio_destroy_stream(global.track_stream_backing);
+	audio_destroy_sync_group(song_instance_sync_group);
 	room_goto(roomMenu);
 }
 function scan_track(_track_directory) {
     var _file_midi = prepare_path(_track_directory + "/track.mid");
-    var _file_audio = prepare_path(_track_directory + "/track.ogg");
+    var _file_audio_backing = prepare_path(_track_directory + "/track_backing.ogg");
+	var _file_audio_input = prepare_path(_track_directory + "/track_input.ogg");
     var _file_art = prepare_path(_track_directory + "/track.png");
     var _file_info = prepare_path(_track_directory + "/track.json");
 
@@ -294,10 +302,14 @@ function scan_track(_track_directory) {
         show_debug_message("Missing MIDI");
         return undefined;
     }
-    if (!file_exists(_file_audio)) {
+    if (!file_exists(_file_audio_backing)) {
         show_debug_message("Missing Audio Stream");
         return undefined;
     }
+	if (!file_exists(_file_audio_input))	{
+		show_debug_message("Missing Input Audio Stream");
+		return undefined;
+	}
     if (!file_exists(_file_art)) {
         _file_art = undefined; 
     }
@@ -305,9 +317,10 @@ function scan_track(_track_directory) {
         show_debug_message("Missing Info JSON");
     }
 
-    return new TrackDetails(_file_midi, _file_audio, _file_art, _file_info);
+    return new TrackDetails(_file_midi, _file_audio_backing, _file_audio_input, _file_art, _file_info);
 }
 function scan_tracks() {
+	show_debug_message("Scanning tracks...");
 	global.tracks_array_all = [];
     tracks_directory = prepare_path(working_directory + "Tracks");
 
@@ -332,18 +345,23 @@ function scan_tracks() {
         if (_a.track_name > _b.track_name) return 1;
         return 0;
     });
+	show_debug_message("Scanning complete");
 }
 function cleanup_tracks()	{
 	for (var _track_entry_index = 0; _track_entry_index < array_length(global.tracks_array_all); _track_entry_index ++)	{
 		var _track_details_current = global.tracks_array_all[_track_entry_index];
-		var _track_audio = _track_details_current.dynamic_stream;
+		var _track_audio_backing = _track_details_current.dynamic_stream_backing;
+		var _track_audio_input = _track_details_current.dynamic_stream_input;
 		var _track_sprite = _track_details_current.dynamic_sprite;
 	
 		if (sprite_exists(_track_sprite))	{
 			sprite_delete(_track_sprite);
 		}
-		if (audio_exists(_track_audio))	{
-			audio_destroy_stream(_track_audio);
+		if (audio_exists(_track_audio_backing))	{
+			audio_destroy_stream(_track_audio_backing);
+		}
+		if (audio_exists(_track_audio_input))	{
+			audio_destroy_stream(_track_audio_input);
 		}
 	}
 }
@@ -466,6 +484,7 @@ function draw_render_game_normal()	{
 		draw_score();
 }
 function save_data_save()	{
+	show_debug_message("Saving save file...");
 	file_delete(save_file_name);
 	var _file_handle = file_text_open_write(save_file_name);
 	var _file_content = json_stringify(global.save_object, true);
@@ -475,6 +494,7 @@ function save_data_save()	{
 	show_debug_message("Saved save file");
 }
 function save_data_load()	{
+	show_debug_message("Loading save...");
 	if (file_exists(save_file_name))	{
 		show_debug_message("Previous save file found");
 		var _file_handle = file_text_open_read(save_file_name);
@@ -490,6 +510,11 @@ function save_data_load()	{
 		show_debug_message("No save found");
 		global.save_object = new SaveData();
 	}
+	show_debug_message("Save loaded");
+}
+function input_volume_update()	{
+	var _volume_value = (global.track_input_volume_value / 100.0);
+	audio_sound_gain(global.track_stream_input, _volume_value, 0.0);
 }
 
 randomize();
@@ -521,6 +546,10 @@ global.note_hit_time[E_NOTE_ACCURACY.MISS] = 240;
 global.note_hit_time[E_NOTE_ACCURACY.OKAY] = 180;
 global.note_hit_time[E_NOTE_ACCURACY.GOOD] = 120;
 global.note_hit_time[E_NOTE_ACCURACY.PERFECT] = 60;
+global.note_hit_audio_volume[E_NOTE_ACCURACY.MISS] = -15;
+global.note_hit_audio_volume[E_NOTE_ACCURACY.OKAY] = 2;
+global.note_hit_audio_volume[E_NOTE_ACCURACY.GOOD] = 5;
+global.note_hit_audio_volume[E_NOTE_ACCURACY.PERFECT] = 8;
 global.note_type_colour[0] = c_red;
 global.note_type_colour[1] = c_yellow;
 global.note_type_colour[2] = c_aqua;
@@ -537,11 +566,13 @@ global.track_time_current_ms = 0;
 global.track_note_hand_count = 0;
 global.track_note_hit_count = 0;
 global.track_note_count = 0;
-global.game_score = 0;
+
+global.track_input_volume_value = 100;
 global.track_note_accuracy[E_NOTE_ACCURACY.MISS] = 0;
 global.track_note_accuracy[E_NOTE_ACCURACY.OKAY] = 0;
 global.track_note_accuracy[E_NOTE_ACCURACY.GOOD] = 0;
 global.track_note_accuracy[E_NOTE_ACCURACY.PERFECT] = 0;
+global.game_score = 0;
 
 midi_information_notes = [];
 midi_information_events = [];
