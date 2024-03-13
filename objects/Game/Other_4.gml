@@ -15,4 +15,10 @@ switch (room)	{
 	case roomOffsetSound:
 		camera_init();
 		break;
+		
+	case roomOverworldDemo:
+		camera_init();
+		overworld_create_player();
+		overworld_prepare_nodes();
+		break;
 }

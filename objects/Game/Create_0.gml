@@ -1,5 +1,4 @@
 // initialize
-show_debug_message("hi")
 #macro TIME_TRACK_GRACE_PERIOD 4000
 
 function TrackDetails(_file_midi, _file_audio_backing, _file_audio_input, _file_art, _file_info) constructor {
@@ -65,6 +64,9 @@ function cleanup_surfaces()	{
 	surface_aux1 = -1;
 	surface_aux2 = -1;
 }
+function cleanup_node_array()	{
+	overworld_node_array = [];
+}
 function camera_init()	{
 	view_enabled = true;
 	view_visible[0] = true;
@@ -99,7 +101,7 @@ function note_score_execute(_note_accuracy)	{
 	if midi_note_placed	{
 		if not midi_note_placed_finished	{
 			global.game_score += global.note_hit_score[_note_accuracy];
-			global.track_input_volume_value = clamp(global.track_input_volume_value + global.note_hit_audio_volume[_note_accuracy], 0, 100);
+			global.track_input_health = clamp(global.track_input_health + global.note_hit_audio_volume[_note_accuracy], 0, 100);
 		}
 	}
 	audio_play_sound(global.note_hit_sound[_note_accuracy], 1, false);
@@ -513,8 +515,48 @@ function save_data_load()	{
 	show_debug_message("Save loaded");
 }
 function input_volume_update()	{
-	var _volume_value = (global.track_input_volume_value / 100.0);
+	var _volume_value = (global.track_input_health / 100.0);
 	audio_sound_gain(global.track_stream_input, _volume_value, 0.0);
+}
+function overworld_prepare_nodes() {
+    for (var _node_index = 0; _node_index < array_length(overworld_node_array); _node_index++) {
+        var _node_instance = overworld_node_array[_node_index];
+        var _node_information = _node_instance.node_info;
+
+        if not is_undefined(_node_information.node_name_up) {
+            _node_information.set_node_up(overworld_return_node(_node_information.node_name_up));
+            show_debug_message("Set node_up for " + string(_node_information.node_name) + " to " + string(_node_information.node_up) + " (" + string(_node_information.node_up) + ")");
+        }
+        if not is_undefined(_node_information.node_name_left) {
+            _node_information.set_node_left(overworld_return_node(_node_information.node_name_left));
+            show_debug_message("Set node_left for " + string(_node_information.node_name) + " to " + string(_node_information.node_left) + " (" + string(_node_information.node_left) + ")");
+        }
+        if not is_undefined(_node_information.node_name_down) {
+            _node_information.set_node_down(overworld_return_node(_node_information.node_name_down));
+            show_debug_message("Set node_down for " + string(_node_information.node_name) + " to " + string(_node_information.node_down) + " (" + string(_node_information.node_down) + ")");
+        }
+        if not is_undefined(_node_information.node_name_right) {
+            _node_information.set_node_right(overworld_return_node(_node_information.node_name_right));
+            show_debug_message("Set node_right for " + string(_node_information.node_name) + " to " + string(_node_information.node_right) + " (" + string(_node_information.node_right) + ")");
+        }
+    }
+}
+
+function overworld_return_node(_node_name)	{
+	for (var _node_index = 0; _node_index < array_length(overworld_node_array); _node_index ++)	{
+		var _node_instance = overworld_node_array[_node_index];
+		var _node_info = _node_instance.node_info;
+		if (_node_info.node_name == _node_name)	{
+			return _node_instance;
+		}
+	}
+	return undefined;
+}
+function overworld_create_player()	{
+	var _position_x = global.overworld_node_start.x;
+	var _position_y = global.overworld_node_start.y;
+	var _instance_id = instance_create_layer(_position_x, _position_y, "Instances", OverworldPlayer);
+	_instance_id.node_set(global.overworld_node_start);
 }
 
 randomize();
@@ -546,7 +588,7 @@ global.note_hit_time[E_NOTE_ACCURACY.MISS] = 240;
 global.note_hit_time[E_NOTE_ACCURACY.OKAY] = 180;
 global.note_hit_time[E_NOTE_ACCURACY.GOOD] = 120;
 global.note_hit_time[E_NOTE_ACCURACY.PERFECT] = 60;
-global.note_hit_audio_volume[E_NOTE_ACCURACY.MISS] = -15;
+global.note_hit_audio_volume[E_NOTE_ACCURACY.MISS] = -20;
 global.note_hit_audio_volume[E_NOTE_ACCURACY.OKAY] = 2;
 global.note_hit_audio_volume[E_NOTE_ACCURACY.GOOD] = 5;
 global.note_hit_audio_volume[E_NOTE_ACCURACY.PERFECT] = 8;
@@ -567,7 +609,7 @@ global.track_note_hand_count = 0;
 global.track_note_hit_count = 0;
 global.track_note_count = 0;
 
-global.track_input_volume_value = 100;
+global.track_input_health = 100;
 global.track_note_accuracy[E_NOTE_ACCURACY.MISS] = 0;
 global.track_note_accuracy[E_NOTE_ACCURACY.OKAY] = 0;
 global.track_note_accuracy[E_NOTE_ACCURACY.GOOD] = 0;
@@ -601,6 +643,7 @@ song_instance_cooked = false;
 save_file_name = game_save_id + "save.json";
 initialized_window = true;
 initialized_camera = false;
+overworld_node_array = [];
 
 depth = -2400;
 
